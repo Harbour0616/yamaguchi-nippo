@@ -1,8 +1,9 @@
 import { useState } from "react";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
+import CustomerMaster from "./pages/CustomerMaster";
 
-type Tab = "manual" | "excel";
+type Tab = "manual" | "excel" | "customers";
 
 function App() {
   const [tab, setTab] = useState<Tab>("manual");
@@ -51,11 +52,22 @@ function App() {
           >
             📂 Excelインポート
           </button>
+          <button
+            onClick={() => setTab("customers")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+              tab === "customers"
+                ? "bg-accent/15 text-accent"
+                : "text-muted hover:text-text"
+            }`}
+          >
+            🏢 顧客先マスタ
+          </button>
         </div>
 
         {/* Tab content */}
         {tab === "manual" && <ManualInput />}
         {tab === "excel" && <ExcelImport />}
+        {tab === "customers" && <CustomerMaster />}
       </main>
     </div>
   );

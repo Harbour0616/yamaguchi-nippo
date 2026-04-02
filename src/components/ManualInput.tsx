@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import type { InputRow, WorkType, CreditAccount } from "../types/journal";
 import { createEmptyRow } from "../types/journal";
 import { toJournalEntries } from "../utils/toJournal";
+import { loadCustomers } from "../data/customers";
 import JournalPreview from "./JournalPreview";
 
 const CREDIT_OPTIONS: CreditAccount[] = [
@@ -26,6 +27,7 @@ const COLUMNS = [
 export default function ManualInput() {
   const [rows, setRows] = useState<InputRow[]>([createEmptyRow()]);
   const tableRef = useRef<HTMLTableElement>(null);
+  const customers = useMemo(() => loadCustomers(), []);
 
   const updateRow = useCallback(
     (id: string, field: keyof InputRow, value: string | number) => {
@@ -195,6 +197,7 @@ export default function ManualInput() {
                 <td className="p-1">
                   <input
                     type="text"
+                    list="customer-list"
                     data-row={ri}
                     data-col={3}
                     value={row.client}
@@ -292,6 +295,11 @@ export default function ManualInput() {
             ))}
           </tbody>
         </table>
+        <datalist id="customer-list">
+          {customers.map((c) => (
+            <option key={c.id} value={c.name} />
+          ))}
+        </datalist>
       </div>
 
       <button
