@@ -1,31 +1,36 @@
-import type { InputRow, JournalEntry } from "../types/journal";
+import type { DailyRecord, JournalEntry } from "../types/journal";
 
-export function isValidRow(row: InputRow): boolean {
+export function isValidRecord(record: DailyRecord): boolean {
   return (
-    row.workDate !== "" &&
-    row.siteName.trim() !== "" &&
-    row.staffName.trim() !== "" &&
-    row.amount !== "" &&
-    Number(row.amount) > 0
+    record.date !== "" &&
+    record.cost.siteName.trim() !== "" &&
+    record.staff.trim() !== "" &&
+    record.cost.paidSalary !== "" &&
+    Number(record.cost.paidSalary) > 0
   );
 }
 
-export function buildDescription(row: InputRow): string {
-  if (row.description.trim()) return row.description;
-  const parts = [row.siteName, row.staffName, row.task].filter(Boolean);
+export function buildDescription(record: DailyRecord): string {
+  if (record.cost.description.trim()) return record.cost.description;
+  const parts = [record.cost.siteName, record.staff, record.cost.task].filter(
+    Boolean
+  );
   return parts.join(" / ");
 }
 
-export function toJournalEntries(rows: InputRow[]): JournalEntry[] {
-  return rows.filter(isValidRow).map((row, i) => ({
+export function toJournalEntries(records: DailyRecord[]): JournalEntry[] {
+  return records.filter(isValidRecord).map((record, i) => ({
     index: i + 1,
-    workDate: row.workDate,
-    workType: row.workType,
+    workDate: record.date,
+    workType: record.cost.workType,
     debitAccount: "未成工事支出金" as const,
-    debitAmount: Number(row.amount),
-    creditAccount: row.creditAccount,
-    creditAmount: Number(row.amount),
-    description: buildDescription(row),
-    status: row.workType === "出来高" ? ("warn" as const) : ("ok" as const),
+    debitAmount: Number(record.cost.paidSalary),
+    creditAccount: record.cost.creditAccount,
+    creditAmount: Number(record.cost.paidSalary),
+    description: buildDescription(record),
+    status:
+      record.cost.workType === "出来高"
+        ? ("warn" as const)
+        : ("ok" as const),
   }));
 }

@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
-import type { SalesRow } from "../types/journal";
+import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
 
 interface Props {
-  salesRows: SalesRow[];
+  records: DailyRecord[];
 }
 
 interface InvoiceGroup {
   customer: string;
-  rows: SalesRow[];
+  rows: DailyRecord[];
   subtotal: number;
   tax: number;
   total: number;
@@ -22,7 +22,7 @@ function formatDate(d: Date): string {
   return `${y}年${m}月${day}日`;
 }
 
-export default function InvoicePage({ salesRows }: Props) {
+export default function InvoicePage({ records }: Props) {
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -34,30 +34,40 @@ export default function InvoicePage({ salesRows }: Props) {
 
   const company = useMemo(() => loadCompanyInfo(), []);
 
-  // Filter rows by target month
+  // Filter records by target month
   const filtered = useMemo(() => {
-    return salesRows.filter((r) => {
-      if (!r.date || r.totalAmount === "" || Number(r.totalAmount) <= 0)
+    return records.filter((r) => {
+      if (
+        !r.date ||
+        r.sales.totalAmount === "" ||
+        Number(r.sales.totalAmount) <= 0
+      )
         return false;
       return r.date.startsWith(targetMonth);
     });
-  }, [salesRows, targetMonth]);
+  }, [records, targetMonth]);
 
   // Group by customer
   const groups = useMemo<InvoiceGroup[]>(() => {
-    const map = new Map<string, SalesRow[]>();
+    const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
-      const key = r.customer || "（顧客先未設定）";
+      const key = r.sales.customer || "（顧客先未設定）";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(r);
     }
     return Array.from(map.entries()).map(([customer, rows]) => {
       const subtotal = rows.reduce(
-        (s, r) => s + (Number(r.totalAmount) || 0),
+        (s, r) => s + (Number(r.sales.totalAmount) || 0),
         0
       );
       const tax = Math.floor(subtotal * 0.1);
-      return { customer, rows: rows.sort((a, b) => a.date.localeCompare(b.date)), subtotal, tax, total: subtotal + tax };
+      return {
+        customer,
+        rows: rows.sort((a, b) => a.date.localeCompare(b.date)),
+        subtotal,
+        tax,
+        total: subtotal + tax,
+      };
     });
   }, [filtered]);
 
@@ -148,11 +158,11 @@ export default function InvoicePage({ salesRows }: Props) {
               {group.rows.map((r) => (
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="py-2 px-2 font-mono text-xs">{r.date}</td>
-                  <td className="py-2 px-2">{r.site}</td>
+                  <td className="py-2 px-2">{r.sales.site}</td>
                   <td className="py-2 px-2">{r.staff}</td>
-                  <td className="py-2 px-2">{r.task}</td>
+                  <td className="py-2 px-2">{r.sales.task}</td>
                   <td className="py-2 px-2 text-right font-mono">
-                    ¥{(Number(r.totalAmount) || 0).toLocaleString()}
+                    ¥{(Number(r.sales.totalAmount) || 0).toLocaleString()}
                   </td>
                 </tr>
               ))}

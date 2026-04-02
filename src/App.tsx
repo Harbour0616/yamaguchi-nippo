@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { InputRow, SalesRow } from "./types/journal";
-import { createEmptyRow, createEmptySalesRow } from "./types/journal";
+import type { DailyRecord } from "./types/journal";
+import { createEmptyDailyRecord } from "./types/journal";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
 import CustomerMaster from "./pages/CustomerMaster";
@@ -9,8 +9,10 @@ import StaffMaster from "./pages/StaffMaster";
 import CompanyMaster from "./pages/CompanyMaster";
 import InvoicePage from "./pages/InvoicePage";
 import PayslipPage from "./pages/PayslipPage";
+import SiteMaster from "./pages/SiteMaster";
 
 type Page =
+  | "site"
   | "manual"
   | "excel"
   | "customers"
@@ -24,6 +26,8 @@ interface MenuItem {
   icon: string;
   label: string;
 }
+
+const TOP_MENU: MenuItem = { id: "site", icon: "🏗️", label: "現場登録" };
 
 const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
   {
@@ -53,10 +57,9 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
 
 function App() {
   const [page, setPage] = useState<Page>("manual");
-  const [salesRows, setSalesRows] = useState<SalesRow[]>([
-    createEmptySalesRow(),
+  const [records, setRecords] = useState<DailyRecord[]>([
+    createEmptyDailyRecord(),
   ]);
-  const [costRows, setCostRows] = useState<InputRow[]>([createEmptyRow()]);
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex">
@@ -70,6 +73,20 @@ function App() {
 
         {/* Menu */}
         <nav className="flex-1 overflow-y-auto py-4">
+          {/* Top-level item — no section header */}
+          <div className="mb-4">
+            <button
+              onClick={() => setPage(TOP_MENU.id)}
+              className={`w-full text-left px-5 py-2 text-sm flex items-center gap-2.5 transition ${
+                page === TOP_MENU.id
+                  ? "bg-accent/10 text-accent font-medium border-r-2 border-accent"
+                  : "text-text/70 hover:bg-[rgba(0,0,0,0.03)] hover:text-text"
+              }`}
+            >
+              <span className="text-base leading-none">{TOP_MENU.icon}</span>
+              {TOP_MENU.label}
+            </button>
+          </div>
           {MENU_SECTIONS.map((section) => (
             <div key={section.title} className="mb-4">
               <div className="px-5 mb-1 text-[11px] font-semibold text-muted uppercase tracking-wider">
@@ -107,16 +124,17 @@ function App() {
       {/* Content */}
       <main className="ml-[220px] flex-1 min-h-screen print:ml-0">
         <div className="max-w-7xl mx-auto px-6 py-6 print:px-0 print:py-0 print:max-w-none">
+          {page === "site" && <SiteMaster />}
           {page === "manual" && (
-            <ManualInput salesRows={salesRows} setSalesRows={setSalesRows} costRows={costRows} setCostRows={setCostRows} />
+            <ManualInput records={records} setRecords={setRecords} />
           )}
           {page === "excel" && <ExcelImport />}
-          {page === "invoice" && <InvoicePage salesRows={salesRows} />}
+          {page === "invoice" && <InvoicePage records={records} />}
           {page === "customers" && <CustomerMaster />}
 
           {page === "staff" && <StaffMaster />}
           {page === "company" && <CompanyMaster />}
-          {page === "payslip" && <PayslipPage costRows={costRows} />}
+          {page === "payslip" && <PayslipPage records={records} />}
         </div>
       </main>
     </div>

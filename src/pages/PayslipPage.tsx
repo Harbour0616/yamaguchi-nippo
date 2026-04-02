@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
-import type { InputRow } from "../types/journal";
+import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 
 interface Props {
-  costRows: InputRow[];
+  records: DailyRecord[];
 }
 
 interface StaffSummary {
   staffName: string;
-  rows: InputRow[];
+  rows: DailyRecord[];
   basicWage: number;
   overtimePay: number;
   allowance: number;
@@ -26,20 +26,20 @@ function num(v: number | ""): number {
   return Number(v) || 0;
 }
 
-function aggregateStaff(staffName: string, rows: InputRow[]): StaffSummary {
-  // Map existing InputRow.amount to basicWage
-  // TODO: When InputRow gains dedicated fields (basicWage, overtimePay, etc.),
-  //       switch to summing those instead.
-  const basicWage = rows.reduce((s, r) => s + num(r.amount), 0);
-  const overtimePay = 0;
-  const allowance = 0;
-  const transport = 0;
+function aggregateStaff(staffName: string, rows: DailyRecord[]): StaffSummary {
+  const basicWage = rows.reduce((s, r) => s + num(r.cost.basicWage), 0);
+  const overtimePay = rows.reduce((s, r) => s + num(r.cost.overtimePay), 0);
+  const allowance = rows.reduce((s, r) => s + num(r.cost.allowance), 0);
+  const transport = rows.reduce((s, r) => s + num(r.cost.transport), 0);
   const grossPay = basicWage + overtimePay + allowance + transport;
 
-  const mgmtFee = 0;
-  const insurance = 0;
-  const dormFee = 0;
-  const withholdingTax = 0;
+  const mgmtFee = rows.reduce((s, r) => s + num(r.cost.mgmtFee), 0);
+  const insurance = rows.reduce((s, r) => s + num(r.cost.insurance), 0);
+  const dormFee = rows.reduce((s, r) => s + num(r.cost.dormFee), 0);
+  const withholdingTax = rows.reduce(
+    (s, r) => s + num(r.cost.withholdingTax),
+    0
+  );
   const totalDeduction = mgmtFee + insurance + dormFee + withholdingTax;
 
   const netPay = grossPay - totalDeduction;
@@ -61,7 +61,7 @@ function aggregateStaff(staffName: string, rows: InputRow[]): StaffSummary {
   };
 }
 
-export default function PayslipPage({ costRows }: Props) {
+export default function PayslipPage({ records }: Props) {
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -70,20 +70,24 @@ export default function PayslipPage({ costRows }: Props) {
 
   const company = useMemo(() => loadCompanyInfo(), []);
 
-  // Filter by month
+  // Filter by month — require date, staff, and some cost data
   const filtered = useMemo(() => {
-    return costRows.filter((r) => {
-      if (!r.workDate || !r.staffName.trim() || r.amount === "" || num(r.amount) <= 0)
-        return false;
-      return r.workDate.startsWith(targetMonth);
+    return records.filter((r) => {
+      if (!r.date || !r.staff.trim()) return false;
+      // Include if paidSalary is set, or if basicWage is set
+      const hasCost =
+        (r.cost.paidSalary !== "" && num(r.cost.paidSalary) > 0) ||
+        (r.cost.basicWage !== "" && num(r.cost.basicWage) > 0);
+      if (!hasCost) return false;
+      return r.date.startsWith(targetMonth);
     });
-  }, [costRows, targetMonth]);
+  }, [records, targetMonth]);
 
   // Group by staff
   const staffGroups = useMemo<StaffSummary[]>(() => {
-    const map = new Map<string, InputRow[]>();
+    const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
-      const key = r.staffName.trim();
+      const key = r.staff.trim();
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(r);
     }
@@ -227,19 +231,19 @@ export default function PayslipPage({ costRows }: Props) {
                   <th className="py-1 px-1">稼働日</th>
                   <th className="py-1 px-1">現場名</th>
                   <th className="py-1 px-1">業務</th>
-                  <th className="py-1 px-1 text-right">金額</th>
+                  <th className="py-1 px-1 text-right">支給給与</th>
                 </tr>
               </thead>
               <tbody>
                 {summary.rows
-                  .sort((a, b) => a.workDate.localeCompare(b.workDate))
+                  .sort((a, b) => a.date.localeCompare(b.date))
                   .map((r) => (
                     <tr key={r.id} className="border-b border-border/30">
-                      <td className="py-1 px-1 font-mono">{r.workDate}</td>
-                      <td className="py-1 px-1">{r.siteName}</td>
-                      <td className="py-1 px-1">{r.task}</td>
+                      <td className="py-1 px-1 font-mono">{r.date}</td>
+                      <td className="py-1 px-1">{r.cost.siteName}</td>
+                      <td className="py-1 px-1">{r.cost.task}</td>
                       <td className="py-1 px-1 text-right font-mono">
-                        ¥{num(r.amount).toLocaleString()}
+                        ¥{num(r.cost.paidSalary).toLocaleString()}
                       </td>
                     </tr>
                   ))}
