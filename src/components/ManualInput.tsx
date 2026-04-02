@@ -34,11 +34,9 @@ export default function ManualInput() {
           if (r.id !== id) return r;
           const updated = { ...r, [field]: value };
           // Auto-set credit account when workType changes to 出来高
-          if (field === "workType" && value === "出来高") {
-            updated.creditAccount = "外注費未払金（仮）";
-          }
-          if (field === "workType" && value === "常用") {
-            updated.creditAccount = "未払費用";
+          if (field === "workType") {
+            updated.creditAccount =
+              value === "出来高" ? "外注費未払金（仮）" : "未払費用";
           }
           return updated;
         })
@@ -175,8 +173,9 @@ export default function ManualInput() {
                     onKeyDown={(e) => handleKeyDown(e, ri, 1)}
                     className={selectCls}
                   >
-                    <option value="常用">常用</option>
+                    <option value="自社受">自社受</option>
                     <option value="出来高">出来高</option>
+                    <option value="常用">常用</option>
                   </select>
                 </td>
                 <td className="p-1">

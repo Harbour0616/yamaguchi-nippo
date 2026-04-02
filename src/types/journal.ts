@@ -1,4 +1,4 @@
-export type WorkType = "常用" | "出来高";
+export type WorkType = "自社受" | "出来高" | "常用";
 
 export type CreditAccount = "未払費用" | "外注費未払金（仮）" | "未払金";
 
@@ -45,7 +45,7 @@ export function createEmptyRow(overrides?: Partial<InputRow>): InputRow {
   return {
     id: crypto.randomUUID(),
     workDate: "",
-    workType: "常用",
+    workType: "自社受",
     client: "",
     siteName: "",
     staffName: "",
