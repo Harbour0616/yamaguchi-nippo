@@ -7,16 +7,20 @@ export default function SiteMaster() {
   const [sites, setSites] = useState<Site[]>(loadSites);
   const [newSiteName, setNewSiteName] = useState("");
   const [newSiteCustomer, setNewSiteCustomer] = useState("");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
 
   const handleAddSite = useCallback(() => {
     const trimmedName = newSiteName.trim();
     const trimmedCustomer = newSiteCustomer.trim();
-    if (!trimmedName) return;
+    if (!trimmedName || !newStartDate) return;
     const matched = customers.find((c) => c.name === trimmedCustomer);
-    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer));
+    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newStartDate, newEndDate));
     setNewSiteName("");
     setNewSiteCustomer("");
-  }, [newSiteName, newSiteCustomer, customers]);
+    setNewStartDate("");
+    setNewEndDate("");
+  }, [newSiteName, newSiteCustomer, newStartDate, newEndDate, customers]);
 
   const handleRemoveSite = useCallback((id: string) => {
     setSites(removeSite(id));
@@ -44,6 +48,8 @@ export default function SiteMaster() {
                 <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
                   <th className="px-3 py-1.5">現場名</th>
                   <th className="px-3 py-1.5">顧客先名</th>
+                  <th className="px-3 py-1.5">着工日</th>
+                  <th className="px-3 py-1.5">完工日</th>
                   <th className="px-3 py-1.5 w-12"></th>
                 </tr>
               </thead>
@@ -56,6 +62,12 @@ export default function SiteMaster() {
                     <td className="px-3 py-1.5">{s.name}</td>
                     <td className="px-3 py-1.5 text-muted">
                       {s.customer_name || "-"}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-xs">
+                      {s.startDate || "-"}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-xs text-muted">
+                      {s.endDate || "-"}
                     </td>
                     <td className="px-3 py-1.5 text-right">
                       <button
@@ -98,9 +110,29 @@ export default function SiteMaster() {
               <option key={c.id} value={c.name} />
             ))}
           </datalist>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-xs text-muted">着工日 *</label>
+              <input
+                type="date"
+                value={newStartDate}
+                onChange={(e) => setNewStartDate(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-muted">完工日</label>
+              <input
+                type="date"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                className={inputCls}
+              />
+            </div>
+          </div>
           <button
             onClick={handleAddSite}
-            disabled={!newSiteName.trim()}
+            disabled={!newSiteName.trim() || !newStartDate}
             className="px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             追加

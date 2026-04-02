@@ -3,6 +3,8 @@ export interface Site {
   name: string;
   customer_id: string;
   customer_name: string;
+  startDate: string;
+  endDate: string;
 }
 
 const STORAGE_KEY = "yamaguchi_sites";
@@ -24,7 +26,9 @@ export function saveSites(sites: Site[]): void {
 export function addSite(
   name: string,
   customerId: string,
-  customerName: string
+  customerName: string,
+  startDate: string,
+  endDate: string
 ): Site[] {
   const sites = loadSites();
   const trimmed = name.trim();
@@ -36,6 +40,8 @@ export function addSite(
       name: trimmed,
       customer_id: customerId,
       customer_name: customerName.trim(),
+      startDate,
+      endDate,
     },
   ];
   saveSites(updated);
