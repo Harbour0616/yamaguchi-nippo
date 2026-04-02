@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import type { InputRow, SalesRow, WorkType, CreditAccount } from "../types/journal";
 import { createEmptyRow } from "../types/journal";
 import { toJournalEntries } from "../utils/toJournal";
@@ -30,10 +30,18 @@ const COLUMNS = [
 interface Props {
   salesRows: SalesRow[];
   setSalesRows: React.Dispatch<React.SetStateAction<SalesRow[]>>;
+  costRows: InputRow[];
+  setCostRows: React.Dispatch<React.SetStateAction<InputRow[]>>;
 }
 
-export default function ManualInput({ salesRows, setSalesRows }: Props) {
-  const [rows, setRows] = useState<InputRow[]>([createEmptyRow()]);
+export default function ManualInput({
+  salesRows,
+  setSalesRows,
+  costRows,
+  setCostRows,
+}: Props) {
+  const rows = costRows;
+  const setRows = setCostRows;
   const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
   const sites = useMemo(() => loadSites(), []);

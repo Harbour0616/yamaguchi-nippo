@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { SalesRow } from "./types/journal";
-import { createEmptySalesRow } from "./types/journal";
+import type { InputRow, SalesRow } from "./types/journal";
+import { createEmptyRow, createEmptySalesRow } from "./types/journal";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
 import CustomerMaster from "./pages/CustomerMaster";
@@ -8,6 +8,7 @@ import SiteMaster from "./pages/SiteMaster";
 import StaffMaster from "./pages/StaffMaster";
 import CompanyMaster from "./pages/CompanyMaster";
 import InvoicePage from "./pages/InvoicePage";
+import PayslipPage from "./pages/PayslipPage";
 
 type Page =
   | "manual"
@@ -16,7 +17,8 @@ type Page =
   | "sites"
   | "staff"
   | "company"
-  | "invoice";
+  | "invoice"
+  | "payslip";
 
 interface MenuItem {
   id: Page;
@@ -37,6 +39,10 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
     items: [{ id: "invoice", icon: "🧾", label: "請求書作成" }],
   },
   {
+    title: "給与管理",
+    items: [{ id: "payslip", icon: "📋", label: "給与明細作成" }],
+  },
+  {
     title: "マスタ管理",
     items: [
       { id: "customers", icon: "🏢", label: "顧客先マスタ" },
@@ -52,6 +58,7 @@ function App() {
   const [salesRows, setSalesRows] = useState<SalesRow[]>([
     createEmptySalesRow(),
   ]);
+  const [costRows, setCostRows] = useState<InputRow[]>([createEmptyRow()]);
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex">
@@ -103,7 +110,7 @@ function App() {
       <main className="ml-[220px] flex-1 min-h-screen print:ml-0">
         <div className="max-w-7xl mx-auto px-6 py-6 print:px-0 print:py-0 print:max-w-none">
           {page === "manual" && (
-            <ManualInput salesRows={salesRows} setSalesRows={setSalesRows} />
+            <ManualInput salesRows={salesRows} setSalesRows={setSalesRows} costRows={costRows} setCostRows={setCostRows} />
           )}
           {page === "excel" && <ExcelImport />}
           {page === "invoice" && <InvoicePage salesRows={salesRows} />}
@@ -111,6 +118,7 @@ function App() {
           {page === "sites" && <SiteMaster />}
           {page === "staff" && <StaffMaster />}
           {page === "company" && <CompanyMaster />}
+          {page === "payslip" && <PayslipPage costRows={costRows} />}
         </div>
       </main>
     </div>
