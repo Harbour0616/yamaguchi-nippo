@@ -4,6 +4,7 @@ import { createEmptyRow } from "../types/journal";
 import { toJournalEntries } from "../utils/toJournal";
 import { loadCustomers } from "../data/customers";
 import { loadSites } from "../data/sites";
+import { loadStaff } from "../data/staff";
 import JournalPreview from "./JournalPreview";
 
 const CREDIT_OPTIONS: CreditAccount[] = [
@@ -30,6 +31,7 @@ export default function ManualInput() {
   const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
   const sites = useMemo(() => loadSites(), []);
+  const staffList = useMemo(() => loadStaff(), []);
 
   const updateRow = useCallback(
     (id: string, field: keyof InputRow, value: string | number) => {
@@ -234,6 +236,7 @@ export default function ManualInput() {
                 <td className="p-1">
                   <input
                     type="text"
+                    list="staff-list"
                     data-row={ri}
                     data-col={5}
                     value={row.staffName}
@@ -310,6 +313,11 @@ export default function ManualInput() {
         </datalist>
         <datalist id="site-list">
           {sites.map((s) => (
+            <option key={s.id} value={s.name} />
+          ))}
+        </datalist>
+        <datalist id="staff-list">
+          {staffList.map((s) => (
             <option key={s.id} value={s.name} />
           ))}
         </datalist>
