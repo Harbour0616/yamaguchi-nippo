@@ -107,7 +107,7 @@ export default function ExcelImport() {
     excelRows.length > 0 ? excelRows[0].targetMonth || "-" : "-";
 
   const selectCls =
-    "bg-surface border border-border rounded px-3 py-1.5 text-sm text-text focus:outline-none focus:border-accent/50";
+    "bg-white border border-border rounded px-3 py-1.5 text-sm text-text focus:outline-none focus:border-accent";
 
   return (
     <div>

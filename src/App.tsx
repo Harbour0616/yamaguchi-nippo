@@ -10,7 +10,7 @@ function App() {
   return (
     <div className="min-h-screen bg-bg text-text font-sans">
       {/* Header */}
-      <header className="border-b border-border bg-surface/50 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-border bg-white/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-accent font-bold text-lg">仕訳</span>

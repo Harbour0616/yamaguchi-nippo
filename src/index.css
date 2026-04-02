@@ -11,12 +11,8 @@
 body {
   margin: 0;
   font-family: "Noto Sans JP", system-ui, sans-serif;
-  background: #0f1117;
-  color: #e2e8f0;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
+  background: #f4f7fb;
+  color: #1e293b;
 }
 
 /* scrollbar */
@@ -25,10 +21,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f1117;
+  background: #f4f7fb;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a3045;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 

@@ -45,7 +45,7 @@ export default function JournalPreview({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-muted text-left">
+            <tr className="border-b border-border text-muted text-left bg-[#f8fafc]">
               <th className="p-2 w-10">#</th>
               <th className="p-2">稼働日</th>
               <th className="p-2">形態</th>
@@ -69,7 +69,7 @@ export default function JournalPreview({
               <tr
                 key={e.index}
                 className={`border-b border-border/50 ${
-                  e.status === "warn" ? "bg-warn/5" : ""
+                  e.status === "warn" ? "bg-[rgba(249,115,22,0.06)]" : "hover:bg-[rgba(0,0,0,0.02)]"
                 }`}
               >
                 <td className="p-2 font-mono text-muted">{e.index}</td>

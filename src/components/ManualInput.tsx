@@ -106,16 +106,16 @@ export default function ManualInput() {
   const journals = toJournalEntries(rows);
 
   const inputCls =
-    "w-full bg-transparent border border-border/50 rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20";
+    "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
   const selectCls =
-    "w-full bg-surface border border-border/50 rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent/50";
+    "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent";
 
   return (
     <div>
       <div className="overflow-x-auto mb-8">
         <table ref={tableRef} className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-muted text-left text-xs">
+            <tr className="border-b border-border text-muted text-left text-xs bg-[#f8fafc]">
               <th className="p-2 w-10"></th>
               <th className="p-2 min-w-[130px]">稼働日 *</th>
               <th className="p-2 min-w-[90px]">形態 *</th>
@@ -132,10 +132,10 @@ export default function ManualInput() {
             {rows.map((row, ri) => (
               <tr
                 key={row.id}
-                className={`border-b border-border/30 ${
+                className={`border-b border-border/50 ${
                   row.workType === "出来高"
-                    ? "bg-warn/10"
-                    : "hover:bg-surface/50"
+                    ? "bg-[rgba(249,115,22,0.06)]"
+                    : "hover:bg-[rgba(0,0,0,0.02)]"
                 }`}
               >
                 <td className="p-1 text-center">
