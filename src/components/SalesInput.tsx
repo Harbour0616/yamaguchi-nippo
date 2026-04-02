@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import type { SalesRow, WorkType } from "../types/journal";
 import { createEmptySalesRow, calcSalesTotal } from "../types/journal";
 import { loadCustomers } from "../data/customers";
@@ -22,8 +22,12 @@ const SALES_COLUMNS = [
   "totalAmount",
 ] as const;
 
-export default function SalesInput() {
-  const [rows, setRows] = useState<SalesRow[]>([createEmptySalesRow()]);
+interface Props {
+  rows: SalesRow[];
+  setRows: React.Dispatch<React.SetStateAction<SalesRow[]>>;
+}
+
+export default function SalesInput({ rows, setRows }: Props) {
   const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
   const sites = useMemo(() => loadSites(), []);

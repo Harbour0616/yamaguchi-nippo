@@ -1,11 +1,22 @@
 import { useState } from "react";
+import type { SalesRow } from "./types/journal";
+import { createEmptySalesRow } from "./types/journal";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
 import CustomerMaster from "./pages/CustomerMaster";
 import SiteMaster from "./pages/SiteMaster";
 import StaffMaster from "./pages/StaffMaster";
+import CompanyMaster from "./pages/CompanyMaster";
+import InvoicePage from "./pages/InvoicePage";
 
-type Page = "manual" | "excel" | "customers" | "sites" | "staff";
+type Page =
+  | "manual"
+  | "excel"
+  | "customers"
+  | "sites"
+  | "staff"
+  | "company"
+  | "invoice";
 
 interface MenuItem {
   id: Page;
@@ -22,22 +33,30 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
     ],
   },
   {
+    title: "売上管理",
+    items: [{ id: "invoice", icon: "🧾", label: "請求書作成" }],
+  },
+  {
     title: "マスタ管理",
     items: [
       { id: "customers", icon: "🏢", label: "顧客先マスタ" },
       { id: "sites", icon: "🏗️", label: "現場マスタ" },
       { id: "staff", icon: "👷", label: "スタッフマスタ" },
+      { id: "company", icon: "⚙️", label: "会社情報" },
     ],
   },
 ];
 
 function App() {
   const [page, setPage] = useState<Page>("manual");
+  const [salesRows, setSalesRows] = useState<SalesRow[]>([
+    createEmptySalesRow(),
+  ]);
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex">
       {/* Sidebar */}
-      <aside className="fixed top-0 left-0 w-[220px] h-screen bg-white border-r border-border flex flex-col z-50">
+      <aside className="fixed top-0 left-0 w-[220px] h-screen bg-white border-r border-border flex flex-col z-50 print:hidden">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
           <div className="text-accent font-bold text-base">山口興業</div>
@@ -81,13 +100,17 @@ function App() {
       </aside>
 
       {/* Content */}
-      <main className="ml-[220px] flex-1 min-h-screen">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          {page === "manual" && <ManualInput />}
+      <main className="ml-[220px] flex-1 min-h-screen print:ml-0">
+        <div className="max-w-7xl mx-auto px-6 py-6 print:px-0 print:py-0 print:max-w-none">
+          {page === "manual" && (
+            <ManualInput salesRows={salesRows} setSalesRows={setSalesRows} />
+          )}
           {page === "excel" && <ExcelImport />}
+          {page === "invoice" && <InvoicePage salesRows={salesRows} />}
           {page === "customers" && <CustomerMaster />}
           {page === "sites" && <SiteMaster />}
           {page === "staff" && <StaffMaster />}
+          {page === "company" && <CompanyMaster />}
         </div>
       </main>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from "react";
-import type { InputRow, WorkType, CreditAccount } from "../types/journal";
+import type { InputRow, SalesRow, WorkType, CreditAccount } from "../types/journal";
 import { createEmptyRow } from "../types/journal";
 import { toJournalEntries } from "../utils/toJournal";
 import { loadCustomers } from "../data/customers";
@@ -27,7 +27,12 @@ const COLUMNS = [
   "description",
 ] as const;
 
-export default function ManualInput() {
+interface Props {
+  salesRows: SalesRow[];
+  setSalesRows: React.Dispatch<React.SetStateAction<SalesRow[]>>;
+}
+
+export default function ManualInput({ salesRows, setSalesRows }: Props) {
   const [rows, setRows] = useState<InputRow[]>([createEmptyRow()]);
   const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
@@ -123,7 +128,7 @@ export default function ManualInput() {
           <span className="w-2 h-5 bg-accent2 rounded-full inline-block"></span>
           売上入力
         </h2>
-        <SalesInput />
+        <SalesInput rows={salesRows} setRows={setSalesRows} />
       </section>
 
       {/* 原価入力セクション */}
