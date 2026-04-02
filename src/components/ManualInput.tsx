@@ -6,6 +6,7 @@ import { loadCustomers } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import JournalPreview from "./JournalPreview";
+import SalesInput from "./SalesInput";
 
 const CREDIT_OPTIONS: CreditAccount[] = [
   "未払費用",
@@ -116,6 +117,21 @@ export default function ManualInput() {
 
   return (
     <div>
+      {/* 売上入力セクション */}
+      <section className="mb-10">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <span className="w-2 h-5 bg-accent2 rounded-full inline-block"></span>
+          売上入力
+        </h2>
+        <SalesInput />
+      </section>
+
+      {/* 原価入力セクション */}
+      <section>
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <span className="w-2 h-5 bg-debit rounded-full inline-block"></span>
+          原価入力
+        </h2>
       <div className="overflow-x-auto mb-8">
         <table ref={tableRef} className="w-full text-sm">
           <thead>
@@ -333,6 +349,7 @@ export default function ManualInput() {
       <div className="border-t border-border pt-6">
         <JournalPreview entries={journals} />
       </div>
+      </section>
     </div>
   );
 }
