@@ -15,7 +15,6 @@ import { loadCustomers } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import JournalPreview from "./JournalPreview";
-import KpiCards from "./KpiCards";
 
 const SALES_COL_COUNT = 12; // date, staff, type, task, customer, site, unitPrice, headcount, overtimePay, allowance, transport, totalAmount
 const COST_COL_COUNT = 13; // workType, task, client, siteName, basicWage, overtimePay, allowance, transport, mgmtFee, insurance, dormFee, withholdingTax, paidSalary
@@ -157,22 +156,6 @@ export default function ManualInput({ records, setRecords }: Props) {
     },
     [records.length, addRecord, focusCell]
   );
-
-  // --- KPI ---
-  const validSales = records.filter(
-    (r) =>
-      r.date && r.sales.totalAmount !== "" && Number(r.sales.totalAmount) > 0
-  );
-  const salesTotalAmount = validSales.reduce(
-    (s, r) => s + (Number(r.sales.totalAmount) || 0),
-    0
-  );
-  const uniqueCustomers = new Set(
-    validSales.map((r) => r.sales.customer).filter(Boolean)
-  ).size;
-  const uniqueSites = new Set(
-    validSales.map((r) => r.sales.site).filter(Boolean)
-  ).size;
 
   const journals = toJournalEntries(records);
 
@@ -806,28 +789,6 @@ export default function ManualInput({ records, setRecords }: Props) {
         >
           + レコードを追加
         </button>
-
-        {/* Sales KPI */}
-        <KpiCards
-          cards={[
-            {
-              label: "売上行数",
-              value: validSales.length,
-              color: "text-accent2",
-            },
-            {
-              label: "請求金額合計（税抜）",
-              value: `¥${salesTotalAmount.toLocaleString()}`,
-              color: "text-debit",
-            },
-            {
-              label: "顧客先数",
-              value: uniqueCustomers,
-              color: "text-accent",
-            },
-            { label: "現場数", value: uniqueSites, color: "text-credit" },
-          ]}
-        />
 
         <div className="border-t border-border pt-6 mt-6">
           <JournalPreview entries={journals} />
