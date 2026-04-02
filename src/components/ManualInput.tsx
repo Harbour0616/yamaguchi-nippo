@@ -3,6 +3,7 @@ import type { InputRow, WorkType, CreditAccount } from "../types/journal";
 import { createEmptyRow } from "../types/journal";
 import { toJournalEntries } from "../utils/toJournal";
 import { loadCustomers } from "../data/customers";
+import { loadSites } from "../data/sites";
 import JournalPreview from "./JournalPreview";
 
 const CREDIT_OPTIONS: CreditAccount[] = [
@@ -28,6 +29,7 @@ export default function ManualInput() {
   const [rows, setRows] = useState<InputRow[]>([createEmptyRow()]);
   const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
+  const sites = useMemo(() => loadSites(), []);
 
   const updateRow = useCallback(
     (id: string, field: keyof InputRow, value: string | number) => {
@@ -212,12 +214,18 @@ export default function ManualInput() {
                 <td className="p-1">
                   <input
                     type="text"
+                    list="site-list"
                     data-row={ri}
                     data-col={4}
                     value={row.siteName}
-                    onChange={(e) =>
-                      updateRow(row.id, "siteName", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      updateRow(row.id, "siteName", val);
+                      const matched = sites.find((s) => s.name === val);
+                      if (matched?.customer_name) {
+                        updateRow(row.id, "client", matched.customer_name);
+                      }
+                    }}
                     onKeyDown={(e) => handleKeyDown(e, ri, 4)}
                     className={inputCls}
                     placeholder="現場名"
@@ -298,6 +306,11 @@ export default function ManualInput() {
         <datalist id="customer-list">
           {customers.map((c) => (
             <option key={c.id} value={c.name} />
+          ))}
+        </datalist>
+        <datalist id="site-list">
+          {sites.map((s) => (
+            <option key={s.id} value={s.name} />
           ))}
         </datalist>
       </div>
