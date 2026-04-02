@@ -240,8 +240,8 @@ export default function PayslipPage({ records }: Props) {
                   .map((r) => (
                     <tr key={r.id} className="border-b border-border/30">
                       <td className="py-1 px-1 font-mono">{r.date}</td>
-                      <td className="py-1 px-1">{r.cost.siteName}</td>
-                      <td className="py-1 px-1">{r.cost.task}</td>
+                      <td className="py-1 px-1">{r.site}</td>
+                      <td className="py-1 px-1">{r.task}</td>
                       <td className="py-1 px-1 text-right font-mono">
                         ¥{num(r.cost.paidSalary).toLocaleString()}
                       </td>

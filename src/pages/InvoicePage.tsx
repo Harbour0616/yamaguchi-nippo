@@ -51,7 +51,7 @@ export default function InvoicePage({ records }: Props) {
   const groups = useMemo<InvoiceGroup[]>(() => {
     const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
-      const key = r.sales.customer || "（顧客先未設定）";
+      const key = r.customer || "（顧客先未設定）";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(r);
     }
@@ -158,9 +158,9 @@ export default function InvoicePage({ records }: Props) {
               {group.rows.map((r) => (
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="py-2 px-2 font-mono text-xs">{r.date}</td>
-                  <td className="py-2 px-2">{r.sales.site}</td>
+                  <td className="py-2 px-2">{r.site}</td>
                   <td className="py-2 px-2">{r.staff}</td>
-                  <td className="py-2 px-2">{r.sales.task}</td>
+                  <td className="py-2 px-2">{r.task}</td>
                   <td className="py-2 px-2 text-right font-mono">
                     ¥{(Number(r.sales.totalAmount) || 0).toLocaleString()}
                   </td>

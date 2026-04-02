@@ -2,12 +2,20 @@ export type WorkType = "自社受" | "出来高" | "常用";
 
 export type CreditAccount = "未払費用" | "外注費未払金（仮）" | "未払金";
 
+export interface SalesRow {
+  id: string;
+  unitPrice: number | "";
+  headcount: number | "";
+  overtimeRate: number | "";
+  overtimePay: number | "";
+  allowance: number | "";
+  transport: number | "";
+  totalAmount: number | "";
+  isManualTotal: boolean;
+}
+
 export interface CostRow {
   id: string;
-  workType: WorkType;
-  task: string;
-  client: string;
-  siteName: string;
   creditAccount: CreditAccount;
   description: string;
   basicWage: number | "";
@@ -24,6 +32,18 @@ export interface CostRow {
 
 /** @deprecated Use CostRow instead */
 export type InputRow = CostRow;
+
+export interface DailyRecord {
+  id: string;
+  date: string;
+  staff: string;
+  type: WorkType;
+  task: string;
+  customer: string;
+  site: string;
+  sales: SalesRow;
+  cost: CostRow;
+}
 
 export interface JournalEntry {
   index: number;
@@ -51,39 +71,11 @@ export interface ExcelRow {
   costTotal: number;
 }
 
-export interface SalesRow {
-  id: string;
-  type: WorkType;
-  task: string;
-  customer: string;
-  site: string;
-  unitPrice: number | "";
-  headcount: number | "";
-  overtimeRate: number | "";
-  overtimePay: number | "";
-  allowance: number | "";
-  transport: number | "";
-  totalAmount: number | "";
-  isManualTotal: boolean;
-}
-
-export interface DailyRecord {
-  id: string;
-  date: string;
-  staff: string;
-  sales: SalesRow;
-  cost: CostRow;
-}
-
 export function createEmptySalesRow(
   overrides?: Partial<SalesRow>
 ): SalesRow {
   return {
     id: crypto.randomUUID(),
-    type: "自社受",
-    task: "",
-    customer: "",
-    site: "",
     unitPrice: "",
     headcount: 1,
     overtimeRate: "",
@@ -101,10 +93,6 @@ export function createEmptyCostRow(
 ): CostRow {
   return {
     id: crypto.randomUUID(),
-    workType: "自社受",
-    task: "",
-    client: "",
-    siteName: "",
     creditAccount: "未払費用",
     description: "",
     basicWage: "",
@@ -138,20 +126,20 @@ export function calcCostPaidSalary(row: CostRow): number {
   const ot = Number(row.overtimePay) || 0;
   const allow = Number(row.allowance) || 0;
   const trans = Number(row.transport) || 0;
-  const mgmt = Number(row.mgmtFee) || 0;
-  const ins = Number(row.insurance) || 0;
-  const dorm = Number(row.dormFee) || 0;
-  const tax = Number(row.withholdingTax) || 0;
-  return basic + ot + allow + trans - mgmt - ins - dorm - tax;
+  return basic + ot + allow + trans;
 }
 
 export function createEmptyDailyRecord(
-  overrides?: Partial<Pick<DailyRecord, "date" | "staff">>
+  overrides?: Partial<Pick<DailyRecord, "date" | "staff" | "type" | "task" | "customer" | "site">>
 ): DailyRecord {
   return {
     id: crypto.randomUUID(),
     date: overrides?.date ?? "",
     staff: overrides?.staff ?? "",
+    type: overrides?.type ?? "自社受",
+    task: overrides?.task ?? "",
+    customer: overrides?.customer ?? "",
+    site: overrides?.site ?? "",
     sales: createEmptySalesRow(),
     cost: createEmptyCostRow(),
   };
