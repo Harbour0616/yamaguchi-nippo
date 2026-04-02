@@ -188,7 +188,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                 <th className={hdrCls}>形態</th>
                 <th className={hdrCls}>業務</th>
                 <th className={hdrCls}>顧客先</th>
-                <th colSpan={7} className={hdrCls}>現場名</th>
+                <th className={hdrCls}>現場名</th>
               </tr>
               {/* Header row 2 — 売上 columns */}
               <tr className={salesBg}>
@@ -198,7 +198,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                 <th className={`${hdrCls} ${salesBg}`}>残業手当</th>
                 <th className={`${hdrCls} ${salesBg}`}>手当支給額</th>
                 <th className={`${hdrCls} ${salesBg}`}>請求交通費</th>
-                <th colSpan={4} className={`${hdrCls} ${salesBg}`}>請求金額（税抜）</th>
+                <th className={`${hdrCls} ${salesBg}`}>請求金額（税抜）</th>
               </tr>
               {/* Header row 3 — 原価 columns */}
               <tr className={costBg}>
@@ -217,9 +217,9 @@ export default function ManualInput({ records, setRecords }: Props) {
             <tbody>
               {records.map((rec, ri) => (
                 <React.Fragment key={rec.id}>
-                  {/* === Row 1: 共通 === */}
-                  <tr className="border-t-2 border-border bg-white">
-                    <td rowSpan={3} className="p-0.5 text-center align-top pt-3 bg-white border-r border-border">
+                  {/* 1行目：共通 */}
+                  <tr style={{ background: '#ffffff' }}>
+                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 text-center align-top pt-3 border-r border-border">
                       <button
                         onClick={() => deleteRecord(rec.id)}
                         className="text-muted hover:text-red-400 text-lg leading-none"
@@ -228,7 +228,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         ×
                       </button>
                     </td>
-                    <td rowSpan={3} className="p-0.5 align-top bg-white border-r border-border">
+                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 align-top border-r border-border">
                       <input
                         type="date"
                         data-rec={ri} data-sub={0} data-col={0}
@@ -238,9 +238,10 @@ export default function ManualInput({ records, setRecords }: Props) {
                         className={inputCls}
                       />
                     </td>
-                    <td rowSpan={3} className="p-0.5 align-top bg-white border-r border-border">
+                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 align-top border-r border-border">
                       <input
-                        type="text" list="staff-list"
+                        type="text"
+                        list="staff-list"
                         data-rec={ri} data-sub={0} data-col={1}
                         value={rec.staff}
                         onChange={(e) => updateField(rec.id, "staff", e.target.value)}
@@ -275,7 +276,8 @@ export default function ManualInput({ records, setRecords }: Props) {
                     </td>
                     <td className="p-0.5">
                       <input
-                        type="text" list="customer-list"
+                        type="text"
+                        list="customer-list"
                         data-rec={ri} data-sub={0} data-col={4}
                         value={rec.customer}
                         onChange={(e) => updateField(rec.id, "customer", e.target.value)}
@@ -284,9 +286,10 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="顧客先"
                       />
                     </td>
-                    <td colSpan={7} className="p-0.5">
+                    <td className="p-0.5">
                       <input
-                        type="text" list="site-list"
+                        type="text"
+                        list="site-list"
                         data-rec={ri} data-sub={0} data-col={5}
                         value={rec.site}
                         onChange={(e) => {
@@ -304,58 +307,69 @@ export default function ManualInput({ records, setRecords }: Props) {
                     </td>
                   </tr>
 
-                  {/* === Row 2: 売上 === */}
-                  <tr className={salesBg}>
-                    <td className={`p-0.5 ${salesBg} text-center`}>
+                  {/* 2行目：売上 */}
+                  <tr style={{ background: '#eff6ff' }}>
+                    <td className="p-0.5 text-center">
                       <span className="inline-block px-2 py-0.5 rounded text-xs font-bold text-blue-700">売上</span>
                     </td>
-                    <td className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={0}
                         value={rec.sales.unitPrice}
                         onChange={(e) => updateSales(rec.id, "unitPrice", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 1, 0)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={1}
                         value={rec.sales.headcount}
                         onChange={(e) => updateSales(rec.id, "headcount", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 1, 1)}
-                        className={numCls} placeholder="1"
+                        className={numCls}
+                        placeholder="1"
                       />
                     </td>
-                    <td className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={2}
                         value={rec.sales.overtimePay}
                         onChange={(e) => updateSales(rec.id, "overtimePay", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 1, 2)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={3}
                         value={rec.sales.allowance}
                         onChange={(e) => updateSales(rec.id, "allowance", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 1, 3)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={4}
                         value={rec.sales.transport}
                         onChange={(e) => updateSales(rec.id, "transport", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 1, 4)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td colSpan={4} className={`p-0.5 ${salesBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={1} data-col={5}
                         value={rec.sales.totalAmount}
                         onChange={(e) => updateSales(rec.id, "totalAmount", e.target.value === "" ? "" : Number(e.target.value))}
@@ -366,85 +380,102 @@ export default function ManualInput({ records, setRecords }: Props) {
                     </td>
                   </tr>
 
-                  {/* === Row 3: 原価 === */}
-                  <tr className={`${costBg} border-b border-border`}>
-                    <td className={`p-0.5 ${costBg} text-center`}>
+                  {/* 3行目：原価 */}
+                  <tr style={{ background: '#fff7ed' }}>
+                    <td className="p-0.5 text-center">
                       <span className="inline-block px-2 py-0.5 rounded text-xs font-bold text-orange-700">原価</span>
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={0}
                         value={rec.cost.basicWage}
                         onChange={(e) => updateCost(rec.id, "basicWage", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 0)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={1}
                         value={rec.cost.overtimePay}
                         onChange={(e) => updateCost(rec.id, "overtimePay", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 1)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={2}
                         value={rec.cost.allowance}
                         onChange={(e) => updateCost(rec.id, "allowance", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 2)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={3}
                         value={rec.cost.transport}
                         onChange={(e) => updateCost(rec.id, "transport", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 3)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={4}
                         value={rec.cost.mgmtFee}
                         onChange={(e) => updateCost(rec.id, "mgmtFee", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 4)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={5}
                         value={rec.cost.insurance}
                         onChange={(e) => updateCost(rec.id, "insurance", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 5)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={6}
                         value={rec.cost.dormFee}
                         onChange={(e) => updateCost(rec.id, "dormFee", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 6)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={7}
                         value={rec.cost.withholdingTax}
                         onChange={(e) => updateCost(rec.id, "withholdingTax", e.target.value === "" ? "" : Number(e.target.value))}
                         onKeyDown={(e) => handleKeyDown(e, ri, 2, 7)}
-                        className={numCls} placeholder="0"
+                        className={numCls}
+                        placeholder="0"
                       />
                     </td>
-                    <td className={`p-0.5 ${costBg}`}>
-                      <input type="number"
+                    <td className="p-0.5">
+                      <input
+                        type="number"
                         data-rec={ri} data-sub={2} data-col={8}
                         value={rec.cost.paidSalary}
                         onChange={(e) => updateCost(rec.id, "paidSalary", e.target.value === "" ? "" : Number(e.target.value))}
