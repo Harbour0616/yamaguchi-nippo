@@ -217,18 +217,17 @@ export default function ManualInput({ records, setRecords }: Props) {
             <tbody>
               {records.map((rec, ri) => (
                 <React.Fragment key={rec.id}>
-                  {/* 1行目：共通 */}
-                  <tr style={{ background: '#ffffff' }}>
-                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 text-center align-top pt-3 border-r border-border">
+
+                  {/* ===== 1行目：共通 ===== */}
+                  <tr style={{ background: '#ffffff', borderTop: '2px solid #e2e8f0' }}>
+                    <td rowSpan={3} style={{ verticalAlign: 'middle', textAlign: 'center', background: '#ffffff', padding: '4px' }}>
                       <button
                         onClick={() => deleteRecord(rec.id)}
                         className="text-muted hover:text-red-400 text-lg leading-none"
                         title="削除"
-                      >
-                        ×
-                      </button>
+                      >×</button>
                     </td>
-                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 align-top border-r border-border">
+                    <td rowSpan={3} style={{ verticalAlign: 'middle', background: '#ffffff', padding: '4px' }}>
                       <input
                         type="date"
                         data-rec={ri} data-sub={0} data-col={0}
@@ -238,7 +237,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         className={inputCls}
                       />
                     </td>
-                    <td rowSpan={3} style={{ background: '#ffffff' }} className="p-0.5 align-top border-r border-border">
+                    <td rowSpan={3} style={{ verticalAlign: 'middle', background: '#ffffff', padding: '4px' }}>
                       <input
                         type="text"
                         list="staff-list"
@@ -250,7 +249,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="スタッフ"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <select
                         data-rec={ri} data-sub={0} data-col={2}
                         value={rec.type}
@@ -263,7 +262,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         <option value="常用">常用</option>
                       </select>
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="text"
                         data-rec={ri} data-sub={0} data-col={3}
@@ -274,7 +273,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="業務"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="text"
                         list="customer-list"
@@ -286,7 +285,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="顧客先"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="text"
                         list="site-list"
@@ -307,12 +306,12 @@ export default function ManualInput({ records, setRecords }: Props) {
                     </td>
                   </tr>
 
-                  {/* 2行目：売上 */}
+                  {/* ===== 2行目：売上 ===== */}
                   <tr style={{ background: '#eff6ff' }}>
-                    <td className="p-0.5 text-center">
-                      <span className="inline-block px-2 py-0.5 rounded text-xs font-bold text-blue-700">売上</span>
+                    <td colSpan={1} style={{ padding: '4px', textAlign: 'center' }}>
+                      <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '12px' }}>売上</span>
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={0}
@@ -323,7 +322,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={1}
@@ -334,7 +333,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="1"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={2}
@@ -345,7 +344,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={3}
@@ -356,7 +355,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={4}
@@ -367,7 +366,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={1} data-col={5}
@@ -380,12 +379,12 @@ export default function ManualInput({ records, setRecords }: Props) {
                     </td>
                   </tr>
 
-                  {/* 3行目：原価 */}
+                  {/* ===== 3行目：原価 ===== */}
                   <tr style={{ background: '#fff7ed' }}>
-                    <td className="p-0.5 text-center">
-                      <span className="inline-block px-2 py-0.5 rounded text-xs font-bold text-orange-700">原価</span>
+                    <td colSpan={1} style={{ padding: '4px', textAlign: 'center' }}>
+                      <span style={{ color: '#f97316', fontWeight: 'bold', fontSize: '12px' }}>原価</span>
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={0}
@@ -396,7 +395,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={1}
@@ -407,7 +406,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={2}
@@ -418,7 +417,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={3}
@@ -429,7 +428,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={4}
@@ -440,7 +439,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={5}
@@ -451,7 +450,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={6}
@@ -462,7 +461,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={7}
@@ -473,7 +472,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                         placeholder="0"
                       />
                     </td>
-                    <td className="p-0.5">
+                    <td style={{ padding: '4px' }}>
                       <input
                         type="number"
                         data-rec={ri} data-sub={2} data-col={8}
@@ -485,6 +484,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                       />
                     </td>
                   </tr>
+
                 </React.Fragment>
               ))}
             </tbody>
