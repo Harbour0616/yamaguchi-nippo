@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { DailyRecord, SalesRow, CostRow, WorkType } from "../types/journal";
 import {
   createEmptyDailyRecord,
@@ -11,18 +11,12 @@ import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import JournalPreview from "./JournalPreview";
 
-// Editable column counts per sub-row
-const COMMON_COLS = 6; // date, staff, type, task, customer, site
-const SALES_COLS = 6; // unitPrice, headcount, overtimePay, allowance, transport, totalAmount
-const COST_COLS = 9; // basicWage, overtimePay, allowance, transport, mgmtFee, insurance, dormFee, withholdingTax, paidSalary
-
 interface Props {
   records: DailyRecord[];
   setRecords: React.Dispatch<React.SetStateAction<DailyRecord[]>>;
 }
 
 export default function ManualInput({ records, setRecords }: Props) {
-  const tableRef = useRef<HTMLTableElement>(null);
   const customers = useMemo(() => loadCustomers(), []);
   const sites = useMemo(() => loadSites(), []);
   const staffList = useMemo(() => loadStaff(), []);
@@ -116,58 +110,15 @@ export default function ManualInput({ records, setRecords }: Props) {
     });
   }, []);
 
-  // --- Keyboard navigation ---
-  const focusCell = useCallback((rec: number, sub: number, col: number) => {
-    const el = tableRef.current?.querySelector(
-      `[data-rec="${rec}"][data-sub="${sub}"][data-col="${col}"]`
-    ) as HTMLElement;
-    el?.focus();
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, recIndex: number, sub: number, col: number) => {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-
-      if (sub === 0) {
-        // Common row
-        if (col + 1 < COMMON_COLS) {
-          focusCell(recIndex, 0, col + 1);
-        } else {
-          focusCell(recIndex, 1, 0);
-        }
-      } else if (sub === 1) {
-        // Sales row
-        if (col + 1 < SALES_COLS) {
-          focusCell(recIndex, 1, col + 1);
-        } else {
-          focusCell(recIndex, 2, 0);
-        }
-      } else {
-        // Cost row
-        if (col + 1 < COST_COLS) {
-          focusCell(recIndex, 2, col + 1);
-        } else {
-          const nextRec = recIndex + 1;
-          if (nextRec >= records.length) addRecord();
-          setTimeout(() => focusCell(nextRec, 0, 0), 0);
-        }
-      }
-    },
-    [records.length, addRecord, focusCell]
-  );
-
   const journals = toJournalEntries(records);
 
   const inputCls =
-    "w-full bg-transparent border border-border rounded px-1.5 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
-  const selectCls =
-    "w-full bg-transparent border border-border rounded px-1.5 py-1 text-sm text-text focus:outline-none focus:border-accent";
+    "w-full bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
   const numCls = `${inputCls} font-mono text-right`;
 
-  const salesBg = "bg-[#eff6ff]";
-  const costBg = "bg-[#fff7ed]";
-  const hdrCls = "p-1.5 border border-border text-xs text-muted font-medium";
+  const numChange = <F extends string>(cb: (id: string, field: F, val: number | "") => void, id: string, field: F) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      cb(id, field, e.target.value === "" ? "" : Number(e.target.value));
 
   return (
     <div>
@@ -177,346 +128,218 @@ export default function ManualInput({ records, setRecords }: Props) {
           日報入力（売上＋原価）
         </h2>
 
-        <div className="overflow-x-auto mb-4">
-          <table ref={tableRef} className="w-full text-sm border-collapse">
-            <thead>
-              {/* Header row 1 — 共通 columns */}
-              <tr className="bg-white">
-                <th rowSpan={3} className={`${hdrCls} w-8`}></th>
-                <th rowSpan={3} className={`${hdrCls} min-w-[120px]`}>稼働日</th>
-                <th rowSpan={3} className={`${hdrCls} min-w-[100px]`}>スタッフ名</th>
-                <th className={hdrCls}>形態</th>
-                <th className={hdrCls}>業務</th>
-                <th className={hdrCls}>顧客先</th>
-                <th className={hdrCls}>現場名</th>
-              </tr>
-              {/* Header row 2 — 売上 columns */}
-              <tr className={salesBg}>
-                <th className={`${hdrCls} ${salesBg} font-bold text-blue-700`}>売上</th>
-                <th className={`${hdrCls} ${salesBg}`}>請求単価</th>
-                <th className={`${hdrCls} ${salesBg}`}>人数</th>
-                <th className={`${hdrCls} ${salesBg}`}>残業手当</th>
-                <th className={`${hdrCls} ${salesBg}`}>手当支給額</th>
-                <th className={`${hdrCls} ${salesBg}`}>請求交通費</th>
-                <th className={`${hdrCls} ${salesBg}`}>請求金額（税抜）</th>
-              </tr>
-              {/* Header row 3 — 原価 columns */}
-              <tr className={costBg}>
-                <th className={`${hdrCls} ${costBg} font-bold text-orange-700`}>原価</th>
-                <th className={`${hdrCls} ${costBg}`}>基本給</th>
-                <th className={`${hdrCls} ${costBg}`}>残業手当</th>
-                <th className={`${hdrCls} ${costBg}`}>各種手当</th>
-                <th className={`${hdrCls} ${costBg}`}>交通費</th>
-                <th className={`${hdrCls} ${costBg}`}>管理費</th>
-                <th className={`${hdrCls} ${costBg}`}>補償保険</th>
-                <th className={`${hdrCls} ${costBg}`}>寮費</th>
-                <th className={`${hdrCls} ${costBg}`}>源泉徴収税額</th>
-                <th className={`${hdrCls} ${costBg}`}>支給給与</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((rec, ri) => (
-                <React.Fragment key={rec.id}>
+        {/* Cards */}
+        <div className="space-y-3 mb-4">
+          {records.map((rec) => (
+            <div
+              key={rec.id}
+              className="bg-white border border-border rounded-lg shadow-sm overflow-hidden"
+            >
+              {/* ===== 上段：共通フィールド ===== */}
+              <div className="bg-[#f8fafc] px-3 py-2 flex flex-wrap items-center gap-2 border-b border-border">
+                <button
+                  onClick={() => deleteRecord(rec.id)}
+                  className="text-muted hover:text-red-500 text-lg leading-none px-1"
+                  title="削除"
+                >×</button>
 
-                  {/* ===== 1行目：共通 ===== */}
-                  <tr style={{ background: '#ffffff', borderTop: '2px solid #e2e8f0' }}>
-                    <td rowSpan={3} style={{ verticalAlign: 'middle', textAlign: 'center', background: '#ffffff', padding: '4px' }}>
-                      <button
-                        onClick={() => deleteRecord(rec.id)}
-                        className="text-muted hover:text-red-400 text-lg leading-none"
-                        title="削除"
-                      >×</button>
-                    </td>
-                    <td rowSpan={3} style={{ verticalAlign: 'middle', background: '#ffffff', padding: '4px' }}>
-                      <input
-                        type="date"
-                        data-rec={ri} data-sub={0} data-col={0}
-                        value={rec.date}
-                        onChange={(e) => updateField(rec.id, "date", e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 0)}
-                        className={inputCls}
-                      />
-                    </td>
-                    <td rowSpan={3} style={{ verticalAlign: 'middle', background: '#ffffff', padding: '4px' }}>
-                      <input
-                        type="text"
-                        list="staff-list"
-                        data-rec={ri} data-sub={0} data-col={1}
-                        value={rec.staff}
-                        onChange={(e) => updateField(rec.id, "staff", e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 1)}
-                        className={inputCls}
-                        placeholder="スタッフ"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <select
-                        data-rec={ri} data-sub={0} data-col={2}
-                        value={rec.type}
-                        onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 2)}
-                        className={selectCls}
-                      >
-                        <option value="自社受">自社受</option>
-                        <option value="出来高">出来高</option>
-                        <option value="常用">常用</option>
-                      </select>
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="text"
-                        data-rec={ri} data-sub={0} data-col={3}
-                        value={rec.task}
-                        onChange={(e) => updateField(rec.id, "task", e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 3)}
-                        className={inputCls}
-                        placeholder="業務"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="text"
-                        list="customer-list"
-                        data-rec={ri} data-sub={0} data-col={4}
-                        value={rec.customer}
-                        onChange={(e) => updateField(rec.id, "customer", e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 4)}
-                        className={inputCls}
-                        placeholder="顧客先"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="text"
-                        list="site-list"
-                        data-rec={ri} data-sub={0} data-col={5}
-                        value={rec.site}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          updateField(rec.id, "site", val);
-                          const matched = sites.find((s) => s.name === val);
-                          if (matched?.customer_name) {
-                            updateField(rec.id, "customer", matched.customer_name);
-                          }
-                        }}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 0, 5)}
-                        className={inputCls}
-                        placeholder="現場名"
-                      />
-                    </td>
-                  </tr>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  稼働日
+                  <input
+                    type="date"
+                    value={rec.date}
+                    onChange={(e) => updateField(rec.id, "date", e.target.value)}
+                    className={`${inputCls} w-[140px]`}
+                  />
+                </label>
 
-                  {/* ===== 2行目：売上 ===== */}
-                  <tr style={{ background: '#eff6ff' }}>
-                    <td colSpan={1} style={{ padding: '4px', textAlign: 'center' }}>
-                      <span style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '12px' }}>売上</span>
-                    </td>
-                    <td style={{ padding: '4px' }}>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  スタッフ
+                  <input
+                    type="text"
+                    list="staff-list"
+                    value={rec.staff}
+                    onChange={(e) => updateField(rec.id, "staff", e.target.value)}
+                    className={`${inputCls} w-[100px]`}
+                    placeholder="スタッフ"
+                  />
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  形態
+                  <select
+                    value={rec.type}
+                    onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
+                    className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent"
+                  >
+                    <option value="自社受">自社受</option>
+                    <option value="出来高">出来高</option>
+                    <option value="常用">常用</option>
+                  </select>
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  業務
+                  <input
+                    type="text"
+                    value={rec.task}
+                    onChange={(e) => updateField(rec.id, "task", e.target.value)}
+                    className={`${inputCls} w-[100px]`}
+                    placeholder="業務"
+                  />
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  顧客先
+                  <input
+                    type="text"
+                    list="customer-list"
+                    value={rec.customer}
+                    onChange={(e) => updateField(rec.id, "customer", e.target.value)}
+                    className={`${inputCls} w-[120px]`}
+                    placeholder="顧客先"
+                  />
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  現場
+                  <input
+                    type="text"
+                    list="site-list"
+                    value={rec.site}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      updateField(rec.id, "site", val);
+                      const matched = sites.find((s) => s.name === val);
+                      if (matched?.customer_name) {
+                        updateField(rec.id, "customer", matched.customer_name);
+                      }
+                    }}
+                    className={`${inputCls} w-[140px]`}
+                    placeholder="現場名"
+                  />
+                </label>
+              </div>
+
+              {/* ===== 下段：売上 + 原価 横並び ===== */}
+              <div className="flex">
+                {/* 売上 */}
+                <div className="flex-1 bg-[#eff6ff] p-3 border-r border-border">
+                  <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
+                  <div className="space-y-1.5">
+                    <Field label="請求単価">
+                      <input type="number" value={rec.sales.unitPrice} onChange={numChange(updateSales, rec.id, "unitPrice")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="人数">
+                      <input type="number" value={rec.sales.headcount} onChange={numChange(updateSales, rec.id, "headcount")} className={numCls} placeholder="1" />
+                    </Field>
+                    <Field label="残業手当">
+                      <input type="number" value={rec.sales.overtimePay} onChange={numChange(updateSales, rec.id, "overtimePay")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="手当支給額">
+                      <input type="number" value={rec.sales.allowance} onChange={numChange(updateSales, rec.id, "allowance")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="請求交通費">
+                      <input type="number" value={rec.sales.transport} onChange={numChange(updateSales, rec.id, "transport")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="請求金額（税抜）" highlight>
                       <input
                         type="number"
-                        data-rec={ri} data-sub={1} data-col={0}
-                        value={rec.sales.unitPrice}
-                        onChange={(e) => updateSales(rec.id, "unitPrice", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 0)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={1} data-col={1}
-                        value={rec.sales.headcount}
-                        onChange={(e) => updateSales(rec.id, "headcount", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 1)}
-                        className={numCls}
-                        placeholder="1"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={1} data-col={2}
-                        value={rec.sales.overtimePay}
-                        onChange={(e) => updateSales(rec.id, "overtimePay", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 2)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={1} data-col={3}
-                        value={rec.sales.allowance}
-                        onChange={(e) => updateSales(rec.id, "allowance", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 3)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={1} data-col={4}
-                        value={rec.sales.transport}
-                        onChange={(e) => updateSales(rec.id, "transport", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 4)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={1} data-col={5}
                         value={rec.sales.totalAmount}
-                        onChange={(e) => updateSales(rec.id, "totalAmount", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 1, 5)}
-                        className={`${numCls} ${rec.sales.isManualTotal ? "ring-1 ring-warn/30" : ""}`}
+                        onChange={numChange(updateSales, rec.id, "totalAmount")}
+                        className={`${numCls} ${rec.sales.isManualTotal ? "ring-1 ring-amber-300" : ""}`}
                         placeholder="自動"
                       />
-                    </td>
-                  </tr>
+                    </Field>
+                  </div>
+                </div>
 
-                  {/* ===== 3行目：原価 ===== */}
-                  <tr style={{ background: '#fff7ed' }}>
-                    <td colSpan={1} style={{ padding: '4px', textAlign: 'center' }}>
-                      <span style={{ color: '#f97316', fontWeight: 'bold', fontSize: '12px' }}>原価</span>
-                    </td>
-                    <td style={{ padding: '4px' }}>
+                {/* 原価 */}
+                <div className="flex-1 bg-[#fff7ed] p-3">
+                  <div className="text-xs font-bold text-orange-600 mb-2">【原価】</div>
+                  <div className="space-y-1.5">
+                    <Field label="基本給">
+                      <input type="number" value={rec.cost.basicWage} onChange={numChange(updateCost, rec.id, "basicWage")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="残業手当">
+                      <input type="number" value={rec.cost.overtimePay} onChange={numChange(updateCost, rec.id, "overtimePay")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="各種手当">
+                      <input type="number" value={rec.cost.allowance} onChange={numChange(updateCost, rec.id, "allowance")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="交通費">
+                      <input type="number" value={rec.cost.transport} onChange={numChange(updateCost, rec.id, "transport")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="管理費">
+                      <input type="number" value={rec.cost.mgmtFee} onChange={numChange(updateCost, rec.id, "mgmtFee")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="補償保険">
+                      <input type="number" value={rec.cost.insurance} onChange={numChange(updateCost, rec.id, "insurance")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="寮費">
+                      <input type="number" value={rec.cost.dormFee} onChange={numChange(updateCost, rec.id, "dormFee")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="源泉徴収税額">
+                      <input type="number" value={rec.cost.withholdingTax} onChange={numChange(updateCost, rec.id, "withholdingTax")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="支給給与" highlight>
                       <input
                         type="number"
-                        data-rec={ri} data-sub={2} data-col={0}
-                        value={rec.cost.basicWage}
-                        onChange={(e) => updateCost(rec.id, "basicWage", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 0)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={1}
-                        value={rec.cost.overtimePay}
-                        onChange={(e) => updateCost(rec.id, "overtimePay", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 1)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={2}
-                        value={rec.cost.allowance}
-                        onChange={(e) => updateCost(rec.id, "allowance", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 2)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={3}
-                        value={rec.cost.transport}
-                        onChange={(e) => updateCost(rec.id, "transport", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 3)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={4}
-                        value={rec.cost.mgmtFee}
-                        onChange={(e) => updateCost(rec.id, "mgmtFee", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 4)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={5}
-                        value={rec.cost.insurance}
-                        onChange={(e) => updateCost(rec.id, "insurance", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 5)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={6}
-                        value={rec.cost.dormFee}
-                        onChange={(e) => updateCost(rec.id, "dormFee", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 6)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={7}
-                        value={rec.cost.withholdingTax}
-                        onChange={(e) => updateCost(rec.id, "withholdingTax", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 7)}
-                        className={numCls}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '4px' }}>
-                      <input
-                        type="number"
-                        data-rec={ri} data-sub={2} data-col={8}
                         value={rec.cost.paidSalary}
-                        onChange={(e) => updateCost(rec.id, "paidSalary", e.target.value === "" ? "" : Number(e.target.value))}
-                        onKeyDown={(e) => handleKeyDown(e, ri, 2, 8)}
-                        className={`${numCls} ${rec.cost.isManualPaidSalary ? "ring-1 ring-warn/30" : ""}`}
+                        onChange={numChange(updateCost, rec.id, "paidSalary")}
+                        className={`${numCls} ${rec.cost.isManualPaidSalary ? "ring-1 ring-amber-300" : ""}`}
                         placeholder="自動"
                       />
-                    </td>
-                  </tr>
-
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-          <datalist id="customer-list">
-            {customers.map((c) => (
-              <option key={c.id} value={c.name} />
-            ))}
-          </datalist>
-          <datalist id="site-list">
-            {sites.map((s) => (
-              <option key={s.id} value={s.name} />
-            ))}
-          </datalist>
-          <datalist id="staff-list">
-            {staffList.map((s) => (
-              <option key={s.id} value={s.name} />
-            ))}
-          </datalist>
+                    </Field>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* datalists */}
+        <datalist id="customer-list">
+          {customers.map((c) => <option key={c.id} value={c.name} />)}
+        </datalist>
+        <datalist id="site-list">
+          {sites.map((s) => <option key={s.id} value={s.name} />)}
+        </datalist>
+        <datalist id="staff-list">
+          {staffList.map((s) => <option key={s.id} value={s.name} />)}
+        </datalist>
 
         <button
           onClick={addRecord}
           className="mb-6 px-4 py-2 rounded-lg bg-surface border border-border text-accent hover:bg-accent/10 transition text-sm"
         >
-          + レコードを追加
+          ＋ レコードを追加
         </button>
 
         <div className="border-t border-border pt-6 mt-6">
           <JournalPreview entries={journals} />
         </div>
       </section>
+    </div>
+  );
+}
+
+/** ラベル＋入力のペア */
+function Field({
+  label,
+  highlight,
+  children,
+}: {
+  label: string;
+  highlight?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`text-xs shrink-0 w-[100px] text-right ${highlight ? "font-bold text-text" : "text-muted"}`}>
+        {label}
+      </span>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }
