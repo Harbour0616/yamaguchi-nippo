@@ -123,7 +123,7 @@ function App() {
 
       {/* Content */}
       <main className="ml-[220px] flex-1 min-h-screen print:ml-0">
-        <div className="max-w-7xl mx-auto px-6 py-6 print:px-0 print:py-0 print:max-w-none">
+        <div className="px-4 py-6 print:px-0 print:py-0">
           {page === "site" && <SiteMaster />}
           {page === "manual" && (
             <ManualInput records={records} setRecords={setRecords} />
