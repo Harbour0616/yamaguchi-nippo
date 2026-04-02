@@ -14,10 +14,10 @@ const CREDIT_OPTIONS: CreditAccount[] = [
 const COLUMNS = [
   "workDate",
   "workType",
+  "task",
   "client",
   "siteName",
   "staffName",
-  "task",
   "amount",
   "creditAccount",
   "description",
@@ -117,10 +117,10 @@ export default function ManualInput() {
               <th className="p-2 w-10"></th>
               <th className="p-2 min-w-[130px]">稼働日 *</th>
               <th className="p-2 min-w-[90px]">形態 *</th>
+              <th className="p-2 min-w-[120px]">業務</th>
               <th className="p-2 min-w-[120px]">顧客先</th>
               <th className="p-2 min-w-[140px]">現場名 *</th>
               <th className="p-2 min-w-[120px]">スタッフ名 *</th>
-              <th className="p-2 min-w-[100px]">業務</th>
               <th className="p-2 min-w-[110px]">金額 *</th>
               <th className="p-2 min-w-[160px]">貸方科目</th>
               <th className="p-2 min-w-[140px]">摘要</th>
@@ -183,11 +183,25 @@ export default function ManualInput() {
                     type="text"
                     data-row={ri}
                     data-col={2}
+                    value={row.task}
+                    onChange={(e) =>
+                      updateRow(row.id, "task", e.target.value)
+                    }
+                    onKeyDown={(e) => handleKeyDown(e, ri, 2)}
+                    className={inputCls}
+                    placeholder="解体日勤・搬出など"
+                  />
+                </td>
+                <td className="p-1">
+                  <input
+                    type="text"
+                    data-row={ri}
+                    data-col={3}
                     value={row.client}
                     onChange={(e) =>
                       updateRow(row.id, "client", e.target.value)
                     }
-                    onKeyDown={(e) => handleKeyDown(e, ri, 2)}
+                    onKeyDown={(e) => handleKeyDown(e, ri, 3)}
                     className={inputCls}
                     placeholder="顧客先"
                   />
@@ -196,12 +210,12 @@ export default function ManualInput() {
                   <input
                     type="text"
                     data-row={ri}
-                    data-col={3}
+                    data-col={4}
                     value={row.siteName}
                     onChange={(e) =>
                       updateRow(row.id, "siteName", e.target.value)
                     }
-                    onKeyDown={(e) => handleKeyDown(e, ri, 3)}
+                    onKeyDown={(e) => handleKeyDown(e, ri, 4)}
                     className={inputCls}
                     placeholder="現場名"
                   />
@@ -210,28 +224,14 @@ export default function ManualInput() {
                   <input
                     type="text"
                     data-row={ri}
-                    data-col={4}
+                    data-col={5}
                     value={row.staffName}
                     onChange={(e) =>
                       updateRow(row.id, "staffName", e.target.value)
                     }
-                    onKeyDown={(e) => handleKeyDown(e, ri, 4)}
-                    className={inputCls}
-                    placeholder="スタッフ名"
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="text"
-                    data-row={ri}
-                    data-col={5}
-                    value={row.task}
-                    onChange={(e) =>
-                      updateRow(row.id, "task", e.target.value)
-                    }
                     onKeyDown={(e) => handleKeyDown(e, ri, 5)}
                     className={inputCls}
-                    placeholder="業務"
+                    placeholder="スタッフ名"
                   />
                 </td>
                 <td className="p-1">
