@@ -4,7 +4,7 @@ import { createEmptyRow, createEmptySalesRow } from "./types/journal";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
 import CustomerMaster from "./pages/CustomerMaster";
-import SiteMaster from "./pages/SiteMaster";
+
 import StaffMaster from "./pages/StaffMaster";
 import CompanyMaster from "./pages/CompanyMaster";
 import InvoicePage from "./pages/InvoicePage";
@@ -14,7 +14,6 @@ type Page =
   | "manual"
   | "excel"
   | "customers"
-  | "sites"
   | "staff"
   | "company"
   | "invoice"
@@ -30,7 +29,7 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
   {
     title: "日報入力",
     items: [
-      { id: "manual", icon: "✏️", label: "直接入力" },
+      { id: "manual", icon: "📋", label: "日報入力" },
       { id: "excel", icon: "📂", label: "Excelインポート" },
     ],
   },
@@ -46,7 +45,6 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
     title: "マスタ管理",
     items: [
       { id: "customers", icon: "🏢", label: "顧客先マスタ" },
-      { id: "sites", icon: "🏗️", label: "現場マスタ" },
       { id: "staff", icon: "👷", label: "スタッフマスタ" },
       { id: "company", icon: "⚙️", label: "会社情報" },
     ],
@@ -115,7 +113,7 @@ function App() {
           {page === "excel" && <ExcelImport />}
           {page === "invoice" && <InvoicePage salesRows={salesRows} />}
           {page === "customers" && <CustomerMaster />}
-          {page === "sites" && <SiteMaster />}
+
           {page === "staff" && <StaffMaster />}
           {page === "company" && <CompanyMaster />}
           {page === "payslip" && <PayslipPage costRows={costRows} />}
