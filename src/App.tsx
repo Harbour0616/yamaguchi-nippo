@@ -2,72 +2,93 @@ import { useState } from "react";
 import ManualInput from "./components/ManualInput";
 import ExcelImport from "./components/ExcelImport";
 import CustomerMaster from "./pages/CustomerMaster";
+import SiteMaster from "./pages/SiteMaster";
+import StaffMaster from "./pages/StaffMaster";
 
-type Tab = "manual" | "excel" | "customers";
+type Page = "manual" | "excel" | "customers" | "sites" | "staff";
+
+interface MenuItem {
+  id: Page;
+  icon: string;
+  label: string;
+}
+
+const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
+  {
+    title: "日報入力",
+    items: [
+      { id: "manual", icon: "✏️", label: "直接入力" },
+      { id: "excel", icon: "📂", label: "Excelインポート" },
+    ],
+  },
+  {
+    title: "マスタ管理",
+    items: [
+      { id: "customers", icon: "🏢", label: "顧客先マスタ" },
+      { id: "sites", icon: "🏗️", label: "現場マスタ" },
+      { id: "staff", icon: "👷", label: "スタッフマスタ" },
+    ],
+  },
+];
 
 function App() {
-  const [tab, setTab] = useState<Tab>("manual");
+  const [page, setPage] = useState<Page>("manual");
 
   return (
-    <div className="min-h-screen bg-bg text-text font-sans">
-      {/* Header */}
-      <header className="border-b border-border bg-white/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-accent font-bold text-lg">仕訳</span>
-            <span className="text-muted text-sm hidden sm:inline">
-              山口興業 日報→仕訳変換ツール
-            </span>
-          </div>
+    <div className="min-h-screen bg-bg text-text font-sans flex">
+      {/* Sidebar */}
+      <aside className="fixed top-0 left-0 w-[220px] h-screen bg-white border-r border-border flex flex-col z-50">
+        {/* Logo */}
+        <div className="px-5 py-5 border-b border-border">
+          <div className="text-accent font-bold text-base">山口興業</div>
+          <div className="text-muted text-xs mt-0.5">日報管理</div>
+        </div>
+
+        {/* Menu */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          {MENU_SECTIONS.map((section) => (
+            <div key={section.title} className="mb-4">
+              <div className="px-5 mb-1 text-[11px] font-semibold text-muted uppercase tracking-wider">
+                {section.title}
+              </div>
+              {section.items.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setPage(item.id)}
+                  className={`w-full text-left px-5 py-2 text-sm flex items-center gap-2.5 transition ${
+                    page === item.id
+                      ? "bg-accent/10 text-accent font-medium border-r-2 border-accent"
+                      : "text-text/70 hover:bg-[rgba(0,0,0,0.03)] hover:text-text"
+                  }`}
+                >
+                  <span className="text-base leading-none">{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-border">
           <button
             disabled
-            className="px-4 py-1.5 rounded-lg bg-surface border border-border text-muted text-sm cursor-not-allowed opacity-50"
+            className="w-full px-3 py-1.5 rounded-md bg-bg border border-border text-muted text-xs cursor-not-allowed opacity-50 text-center"
           >
-            ⚡ journal_entriesに書込（準備中）
+            ⚡ journal_entries書込（準備中）
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Main */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-surface rounded-lg p-1 w-fit">
-          <button
-            onClick={() => setTab("manual")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === "manual"
-                ? "bg-accent/15 text-accent"
-                : "text-muted hover:text-text"
-            }`}
-          >
-            ✏️ 直接入力
-          </button>
-          <button
-            onClick={() => setTab("excel")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === "excel"
-                ? "bg-accent/15 text-accent"
-                : "text-muted hover:text-text"
-            }`}
-          >
-            📂 Excelインポート
-          </button>
-          <button
-            onClick={() => setTab("customers")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === "customers"
-                ? "bg-accent/15 text-accent"
-                : "text-muted hover:text-text"
-            }`}
-          >
-            🏢 顧客先マスタ
-          </button>
+      {/* Content */}
+      <main className="ml-[220px] flex-1 min-h-screen">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          {page === "manual" && <ManualInput />}
+          {page === "excel" && <ExcelImport />}
+          {page === "customers" && <CustomerMaster />}
+          {page === "sites" && <SiteMaster />}
+          {page === "staff" && <StaffMaster />}
         </div>
-
-        {/* Tab content */}
-        {tab === "manual" && <ManualInput />}
-        {tab === "excel" && <ExcelImport />}
-        {tab === "customers" && <CustomerMaster />}
       </main>
     </div>
   );
