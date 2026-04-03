@@ -202,27 +202,6 @@ export default function ManualInput({ records, setRecords }: Props) {
     setSavedRecords(updateSavedRecord(rec));
   }, []);
 
-  const handleMigrateBasicWage = useCallback(() => {
-    if (!window.confirm("保存済み日報の基本給をスタッフマスタの最新単価で一括上書きします。よろしいですか？")) return;
-    const all = loadSavedRecords();
-    const currentStaff = loadStaff();
-    let count = 0;
-    const updated = all.map((r) => {
-      if (!r.staff) return r;
-      const matched = currentStaff.find((s) => s.name === r.staff);
-      if (!matched?.unitPrice) return r;
-      const cost = { ...r.cost, basicWage: Number(matched.unitPrice) };
-      if (!cost.isManualPaidSalary) {
-        const paid = calcCostPaidSalary(cost);
-        cost.paidSalary = paid > 0 ? paid : "";
-      }
-      count++;
-      return { ...r, cost };
-    });
-    localStorage.setItem("yamaguchi_daily_records", JSON.stringify(updated));
-    setSavedRecords(updated);
-    window.alert(`${count}件更新しました`);
-  }, []);
 
 
   const inputCls =
@@ -403,21 +382,13 @@ export default function ManualInput({ records, setRecords }: Props) {
           ))}
         </div>
 
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={handleSaveRecords}
-            disabled={!records.some((r) => r.date && r.staff)}
-            className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            保存する
-          </button>
-          <button
-            onClick={handleMigrateBasicWage}
-            className="px-4 py-2 rounded-lg bg-surface border border-border text-text text-sm hover:bg-[rgba(0,0,0,0.03)] transition"
-          >
-            基本給を最新単価に更新
-          </button>
-        </div>
+        <button
+          onClick={handleSaveRecords}
+          disabled={!records.some((r) => r.date && r.staff)}
+          className="mb-6 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          保存する
+        </button>
       </section>
 
       {/* 登録済み一覧 */}
