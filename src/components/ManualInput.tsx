@@ -176,11 +176,14 @@ export default function ManualInput({ records, setRecords }: Props) {
     [sites, applyRate]
   );
 
-  const deleteRecord = useCallback((id: string) => {
-    setRecords((prev) => {
-      if (prev.length <= 1) return [createEmptyDailyRecord()];
-      return prev.filter((r) => r.id !== id);
-    });
+  const resetRecord = useCallback((id: string) => {
+    setRecords((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        const fresh = createEmptyDailyRecord();
+        return { ...fresh, id: r.id };
+      })
+    );
   }, []);
 
   const handleSaveRecords = useCallback(() => {
@@ -224,14 +227,8 @@ export default function ManualInput({ records, setRecords }: Props) {
               className="bg-white border border-border rounded-lg shadow-sm overflow-hidden"
             >
               {/* ===== 上段：共通フィールド ===== */}
-              <div className="bg-[#f8fafc] px-3 py-2 flex flex-wrap items-center gap-2 border-b border-border">
-                <button
-                  onClick={() => deleteRecord(rec.id)}
-                  className="text-muted hover:text-red-500 text-lg leading-none px-1"
-                  title="削除"
-                >×</button>
-
-                <label className="flex items-center gap-1 text-xs text-muted">
+              <div className="bg-[#f8fafc] px-3 py-2 flex items-center gap-2 border-b border-border">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   稼働日
                   <input
                     type="date"
@@ -241,7 +238,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   />
                 </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   形態
                   <select
                     value={rec.type}
@@ -255,7 +252,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   </select>
                 </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   業務
                   <select
                     value={rec.task}
@@ -267,7 +264,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   </select>
                 </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   顧客先
                   <select
                     value={rec.customer}
@@ -279,7 +276,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   </select>
                 </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   現場
                   <select
                     value={rec.site}
@@ -291,7 +288,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   </select>
                 </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
+                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
                   スタッフ
                   <select
                     value={rec.staff}
@@ -302,6 +299,13 @@ export default function ManualInput({ records, setRecords }: Props) {
                     {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                 </label>
+
+                <button
+                  onClick={() => resetRecord(rec.id)}
+                  className="shrink-0 px-3 py-1 rounded bg-surface border border-border text-muted text-xs hover:bg-[rgba(0,0,0,0.03)] hover:text-text transition"
+                >
+                  リセット
+                </button>
               </div>
 
               {/* ===== 下段：売上 + 原価 + 日次サマリー 横並び ===== */}
