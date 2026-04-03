@@ -10,8 +10,10 @@ import CompanyMaster from "./pages/CompanyMaster";
 import InvoicePage from "./pages/InvoicePage";
 import PayslipPage from "./pages/PayslipPage";
 import SiteMaster from "./pages/SiteMaster";
+import Dashboard from "./pages/Dashboard";
 
 type Page =
+  | "dashboard"
   | "site"
   | "manual"
   | "excel"
@@ -27,7 +29,10 @@ interface MenuItem {
   label: string;
 }
 
-const TOP_MENU: MenuItem = { id: "site", icon: "🏗️", label: "現場登録" };
+const TOP_ITEMS: MenuItem[] = [
+  { id: "dashboard", icon: "📊", label: "ダッシュボード" },
+  { id: "site", icon: "🏗️", label: "現場登録" },
+];
 
 const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
   {
@@ -73,19 +78,22 @@ function App() {
 
         {/* Menu */}
         <nav className="flex-1 overflow-y-auto py-4">
-          {/* Top-level item — no section header */}
+          {/* Top-level items — no section header */}
           <div className="mb-4">
-            <button
-              onClick={() => setPage(TOP_MENU.id)}
-              className={`w-full text-left px-5 py-2 text-sm flex items-center gap-2.5 transition ${
-                page === TOP_MENU.id
-                  ? "bg-accent/10 text-accent font-medium border-r-2 border-accent"
-                  : "text-text/70 hover:bg-[rgba(0,0,0,0.03)] hover:text-text"
-              }`}
-            >
-              <span className="text-base leading-none">{TOP_MENU.icon}</span>
-              {TOP_MENU.label}
-            </button>
+            {TOP_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setPage(item.id)}
+                className={`w-full text-left px-5 py-2 text-sm flex items-center gap-2.5 transition ${
+                  page === item.id
+                    ? "bg-accent/10 text-accent font-medium border-r-2 border-accent"
+                    : "text-text/70 hover:bg-[rgba(0,0,0,0.03)] hover:text-text"
+                }`}
+              >
+                <span className="text-base leading-none">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
           </div>
           {MENU_SECTIONS.map((section) => (
             <div key={section.title} className="mb-4">
@@ -124,6 +132,7 @@ function App() {
       {/* Content */}
       <main className="ml-[220px] flex-1 min-h-screen print:ml-0">
         <div className="px-4 py-6 print:px-0 print:py-0">
+          {page === "dashboard" && <Dashboard />}
           {page === "site" && <SiteMaster />}
           {page === "manual" && (
             <ManualInput records={records} setRecords={setRecords} />
