@@ -416,12 +416,23 @@ function SavedRecordsList({
   onDelete: (id: string) => void;
   onUpdate: (rec: DailyRecord) => void;
 }) {
+  const [filterMonth, setFilterMonth] = useState("");
   const [filterCustomer, setFilterCustomer] = useState("");
   const [editDraft, setEditDraft] = useState<DailyRecord | null>(null);
 
-  const filtered = filterCustomer
-    ? savedRecords.filter((r) => r.customer === filterCustomer)
-    : savedRecords;
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of savedRecords) {
+      if (r.date) set.add(r.date.slice(0, 7));
+    }
+    return Array.from(set).sort().reverse();
+  }, [savedRecords]);
+
+  const filtered = savedRecords.filter((r) => {
+    if (filterMonth && (!r.date || !r.date.startsWith(filterMonth))) return false;
+    if (filterCustomer && r.customer !== filterCustomer) return false;
+    return true;
+  });
 
   const totalSales = filtered.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
   const totalCost = filtered.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
@@ -556,6 +567,18 @@ function SavedRecordsList({
       ) : (
         <>
           <div className="flex items-center gap-3 mb-3">
+            <label className="text-xs text-muted">月:</label>
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className={`${inputCls} w-[150px]`}
+            >
+              <option value="">すべて</option>
+              {availableMonths.map((ym) => {
+                const [y, m] = ym.split("-");
+                return <option key={ym} value={ym}>{y}年{Number(m)}月</option>;
+              })}
+            </select>
             <label className="text-xs text-muted">顧客先:</label>
             <select
               value={filterCustomer}
