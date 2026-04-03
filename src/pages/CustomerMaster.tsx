@@ -130,74 +130,96 @@ export default function CustomerMaster() {
         </div>
 
         {/* 一覧 */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-x-auto">
           {customers.length === 0 ? (
             <p className="text-muted text-sm py-2">
               登録された顧客先はありません。左のフォームから追加してください。
             </p>
           ) : (
-            <ul className="border border-border rounded-lg divide-y divide-border">
-              {customers.map((c) =>
-                editingId === c.id ? (
-                  <li key={c.id} className="px-4 py-3 bg-accent/5 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={editDraft.name}
-                        onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            editRateRefs.current[0]?.focus();
-                          }
-                        }}
-                        className={`${inputCls} flex-1`}
-                      />
-                      <button ref={editSaveBtnRef} onClick={saveEdit} className="text-accent hover:text-accent/80 text-xs font-medium transition">保存</button>
-                      <button onClick={cancelEdit} className="text-muted hover:text-text text-xs transition">キャンセル</button>
-                    </div>
-                    <div className="border border-border rounded-lg p-3 bg-white">
-                      <div className="text-xs font-bold text-muted mb-2">単価設定</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {RATE_LABELS.map(({ key, label }, i) => (
-                          <div key={key}>
-                            <label className="text-[11px] text-muted">{label}</label>
+            <table className="w-full border border-border rounded-lg text-sm">
+              <thead>
+                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
+                  <th className="px-3 py-1.5 whitespace-nowrap">顧客先名</th>
+                  {RATE_LABELS.map(({ key, label }) => (
+                    <th key={key} className="px-3 py-1.5 text-right whitespace-nowrap">{label}</th>
+                  ))}
+                  <th className="px-3 py-1.5 w-12"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map((c) =>
+                  editingId === c.id ? (
+                    <tr key={c.id} className="border-b border-border/50 bg-accent/5">
+                      <td colSpan={RATE_COUNT + 2} className="px-4 py-3">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
                             <input
-                              ref={(el) => { editRateRefs.current[i] = el; }}
-                              type="number"
-                              value={editDraft.rates[key]}
-                              onChange={(e) =>
-                                setEditDraft((d) => ({
-                                  ...d,
-                                  rates: { ...d.rates, [key]: e.target.value === "" ? "" : Number(e.target.value) },
-                                }))
-                              }
-                              onKeyDown={(e) => handleEnterKey(e, i, editRateRefs, editSaveBtnRef)}
-                              className={numCls}
-                              placeholder="0"
+                              type="text"
+                              value={editDraft.name}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  editRateRefs.current[0]?.focus();
+                                }
+                              }}
+                              className={`${inputCls} flex-1`}
                             />
+                            <button ref={editSaveBtnRef} onClick={saveEdit} className="text-accent hover:text-accent/80 text-xs font-medium transition">保存</button>
+                            <button onClick={cancelEdit} className="text-muted hover:text-text text-xs transition">キャンセル</button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </li>
-                ) : (
-                  <li
-                    key={c.id}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
-                    onClick={() => startEdit(c)}
-                  >
-                    <span className="text-sm">{c.name}</span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleRemove(c.id); }}
-                      className="text-muted hover:text-red-500 text-sm transition"
+                          <div className="border border-border rounded-lg p-3 bg-white">
+                            <div className="text-xs font-bold text-muted mb-2">単価設定</div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {RATE_LABELS.map(({ key, label }, i) => (
+                                <div key={key}>
+                                  <label className="text-[11px] text-muted">{label}</label>
+                                  <input
+                                    ref={(el) => { editRateRefs.current[i] = el; }}
+                                    type="number"
+                                    value={editDraft.rates[key]}
+                                    onChange={(e) =>
+                                      setEditDraft((d) => ({
+                                        ...d,
+                                        rates: { ...d.rates, [key]: e.target.value === "" ? "" : Number(e.target.value) },
+                                      }))
+                                    }
+                                    onKeyDown={(e) => handleEnterKey(e, i, editRateRefs, editSaveBtnRef)}
+                                    className={numCls}
+                                    placeholder="0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr
+                      key={c.id}
+                      className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
+                      onClick={() => startEdit(c)}
                     >
-                      削除
-                    </button>
-                  </li>
-                )
-              )}
-            </ul>
+                      <td className="px-3 py-1.5 whitespace-nowrap">{c.name}</td>
+                      {RATE_LABELS.map(({ key }) => (
+                        <td key={key} className="px-3 py-1.5 text-right font-mono text-xs whitespace-nowrap">
+                          {c.rates?.[key] ? Number(c.rates[key]).toLocaleString() : "-"}
+                        </td>
+                      ))}
+                      <td className="px-3 py-1.5 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRemove(c.id); }}
+                          className="text-muted hover:text-red-500 text-xs transition"
+                        >
+                          削除
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
           )}
           <p className="text-muted text-xs mt-2">
             {customers.length} 件登録済み
