@@ -155,14 +155,14 @@ export default function ManualInput({ records, setRecords }: Props) {
 
                 <label className="flex items-center gap-1 text-xs text-muted">
                   スタッフ
-                  <input
-                    type="text"
-                    list="staff-list"
+                  <select
                     value={rec.staff}
                     onChange={(e) => updateField(rec.id, "staff", e.target.value)}
-                    className={`${inputCls} w-[100px]`}
-                    placeholder="スタッフ"
-                  />
+                    className={`${inputCls} w-[120px]`}
+                  >
+                    <option value="">選択</option>
+                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
                 </label>
 
                 <label className="flex items-center gap-1 text-xs text-muted">
@@ -191,21 +191,19 @@ export default function ManualInput({ records, setRecords }: Props) {
 
                 <label className="flex items-center gap-1 text-xs text-muted">
                   顧客先
-                  <input
-                    type="text"
-                    list="customer-list"
+                  <select
                     value={rec.customer}
                     onChange={(e) => updateField(rec.id, "customer", e.target.value)}
-                    className={`${inputCls} w-[120px]`}
-                    placeholder="顧客先"
-                  />
+                    className={`${inputCls} w-[140px]`}
+                  >
+                    <option value="">選択</option>
+                    {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
                 </label>
 
                 <label className="flex items-center gap-1 text-xs text-muted">
                   現場
-                  <input
-                    type="text"
-                    list="site-list"
+                  <select
                     value={rec.site}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -215,9 +213,11 @@ export default function ManualInput({ records, setRecords }: Props) {
                         updateField(rec.id, "customer", matched.customer_name);
                       }
                     }}
-                    className={`${inputCls} w-[140px]`}
-                    placeholder="現場名"
-                  />
+                    className={`${inputCls} w-[160px]`}
+                  >
+                    <option value="">選択</option>
+                    {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
                 </label>
               </div>
 
@@ -297,17 +297,6 @@ export default function ManualInput({ records, setRecords }: Props) {
             </div>
           ))}
         </div>
-
-        {/* datalists */}
-        <datalist id="customer-list">
-          {customers.map((c) => <option key={c.id} value={c.name} />)}
-        </datalist>
-        <datalist id="site-list">
-          {sites.map((s) => <option key={s.id} value={s.name} />)}
-        </datalist>
-        <datalist id="staff-list">
-          {staffList.map((s) => <option key={s.id} value={s.name} />)}
-        </datalist>
 
         <button
           onClick={addRecord}
