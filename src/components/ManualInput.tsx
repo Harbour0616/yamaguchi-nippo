@@ -5,12 +5,10 @@ import {
   calcSalesTotal,
   calcCostPaidSalary,
 } from "../types/journal";
-import { toJournalEntries } from "../utils/toJournal";
 import { loadCustomers } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import { loadSavedRecords, saveDailyRecords, removeSavedRecord } from "../data/dailyRecords";
-import JournalPreview from "./JournalPreview";
 
 interface Props {
   records: DailyRecord[];
@@ -96,22 +94,6 @@ export default function ManualInput({ records, setRecords }: Props) {
     });
   }, []);
 
-  const addRecord = useCallback(() => {
-    setRecords((prev) => {
-      const last = prev[prev.length - 1];
-      return [
-        ...prev,
-        createEmptyDailyRecord({
-          date: last?.date || "",
-          type: last?.type || "自社受",
-          task: last?.task || "",
-          customer: last?.customer || "",
-          site: last?.site || "",
-        }),
-      ];
-    });
-  }, []);
-
   const handleSaveRecords = useCallback(() => {
     const valid = records.filter((r) => r.date && r.staff);
     if (valid.length === 0) return;
@@ -123,8 +105,6 @@ export default function ManualInput({ records, setRecords }: Props) {
   const handleDeleteSaved = useCallback((id: string) => {
     setSavedRecords(removeSavedRecord(id));
   }, []);
-
-  const journals = toJournalEntries(records);
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
@@ -312,25 +292,13 @@ export default function ManualInput({ records, setRecords }: Props) {
           ))}
         </div>
 
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={addRecord}
-            className="px-4 py-2 rounded-lg bg-surface border border-border text-accent hover:bg-accent/10 transition text-sm"
-          >
-            ＋ レコードを追加
-          </button>
-          <button
-            onClick={handleSaveRecords}
-            disabled={!records.some((r) => r.date && r.staff)}
-            className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            保存する
-          </button>
-        </div>
-
-        <div className="border-t border-border pt-6 mt-6">
-          <JournalPreview entries={journals} />
-        </div>
+        <button
+          onClick={handleSaveRecords}
+          disabled={!records.some((r) => r.date && r.staff)}
+          className="mb-6 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          保存する
+        </button>
       </section>
 
       {/* 入力済み一覧 */}
