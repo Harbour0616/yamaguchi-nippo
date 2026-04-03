@@ -92,30 +92,66 @@ export default function ManualInput({ records, setRecords }: Props) {
     []
   );
 
+  /** 顧客名＋業務名から単価を適用（unitPrice未入力時のみ） */
+  const applyRate = useCallback(
+    (rec: DailyRecord, customerName: string, task: string): DailyRecord => {
+      const rateKey = taskToRateKey.get(task);
+      if (!rateKey || !customerName) return rec;
+      const cust = customers.find((c) => c.name === customerName);
+      const rate = cust?.rates?.[rateKey];
+      if (rate === undefined || rate === "" || rec.sales.unitPrice) return rec;
+      const sales = { ...rec.sales, unitPrice: Number(rate) };
+      if (!sales.isManualTotal) {
+        const total = calcSalesTotal(sales);
+        sales.totalAmount = total > 0 ? total : "";
+      }
+      return { ...rec, sales };
+    },
+    [customers]
+  );
+
   const handleTaskChange = useCallback(
     (id: string, task: string) => {
       setRecords((prev) =>
         prev.map((r) => {
           if (r.id !== id) return r;
           const updated = { ...r, task };
-          const rateKey = taskToRateKey.get(task);
-          if (rateKey && r.customer) {
-            const cust = customers.find((c) => c.name === r.customer);
-            const rate = cust?.rates?.[rateKey];
-            if (rate !== undefined && rate !== "" && !r.sales.unitPrice) {
-              const sales = { ...r.sales, unitPrice: Number(rate) };
-              if (!sales.isManualTotal) {
-                const total = calcSalesTotal(sales);
-                sales.totalAmount = total > 0 ? total : "";
-              }
-              updated.sales = sales;
-            }
+          return applyRate(updated, r.customer, task);
+        })
+      );
+    },
+    [applyRate]
+  );
+
+  const handleCustomerChange = useCallback(
+    (id: string, customer: string) => {
+      setRecords((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          const updated = { ...r, customer };
+          return applyRate(updated, customer, r.task);
+        })
+      );
+    },
+    [applyRate]
+  );
+
+  const handleSiteChange = useCallback(
+    (id: string, siteName: string) => {
+      setRecords((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          let updated = { ...r, site: siteName };
+          const matched = sites.find((s) => s.name === siteName);
+          if (matched?.customer_name) {
+            updated = { ...updated, customer: matched.customer_name };
+            updated = applyRate(updated, matched.customer_name, r.task);
           }
           return updated;
         })
       );
     },
-    [customers]
+    [sites, applyRate]
   );
 
   const deleteRecord = useCallback((id: string) => {
@@ -219,7 +255,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   顧客先
                   <select
                     value={rec.customer}
-                    onChange={(e) => updateField(rec.id, "customer", e.target.value)}
+                    onChange={(e) => handleCustomerChange(rec.id, e.target.value)}
                     className={`${inputCls} w-[140px]`}
                   >
                     <option value="">選択</option>
@@ -231,14 +267,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   現場
                   <select
                     value={rec.site}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      updateField(rec.id, "site", val);
-                      const matched = sites.find((s) => s.name === val);
-                      if (matched?.customer_name) {
-                        updateField(rec.id, "customer", matched.customer_name);
-                      }
-                    }}
+                    onChange={(e) => handleSiteChange(rec.id, e.target.value)}
                     className={`${inputCls} w-[160px]`}
                   >
                     <option value="">選択</option>
