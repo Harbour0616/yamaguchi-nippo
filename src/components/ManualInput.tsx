@@ -410,7 +410,13 @@ function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[];
     const cost = dayRecords.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
     const profit = sales - cost;
     const profitRate = sales > 0 ? (profit / sales) * 100 : 0;
-    return { count: dayRecords.length, sales, cost, profit, profitRate };
+    const siteSet = new Set<string>();
+    const customerSet = new Set<string>();
+    for (const r of dayRecords) {
+      if (r.site) siteSet.add(r.site);
+      if (r.customer) customerSet.add(r.customer);
+    }
+    return { count: dayRecords.length, sales, cost, profit, profitRate, sites: Array.from(siteSet), customers: Array.from(customerSet) };
   }, [savedRecords, summaryDate]);
 
   const fmt = (v: number) => `¥${v.toLocaleString()}`;
@@ -427,6 +433,12 @@ function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[];
       {summary ? (
         <div className="space-y-2 text-sm">
           <div className="text-xs text-muted">{summary.count} 件</div>
+          {summary.customers.length > 0 && (
+            <div className="text-xs"><span className="text-muted">顧客: </span>{summary.customers.join(" ・ ")}</div>
+          )}
+          {summary.sites.length > 0 && (
+            <div className="text-xs"><span className="text-muted">現場: </span>{summary.sites.join(" ・ ")}</div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted text-xs">売上合計</span>
             <span className="font-mono font-bold text-blue-600">{fmt(summary.sales)}</span>
