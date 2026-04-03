@@ -1,19 +1,20 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
 import { loadSavedRecords } from "../data/dailyRecords";
 
-interface SiteGroup {
+interface InvoiceLine {
   site: string;
-  rows: DailyRecord[];
-  subtotal: number;
+  task: string;
+  count: number;
+  unitPrice: number;
+  amount: number;
 }
 
 interface InvoiceGroup {
   customer: string;
-  rows: DailyRecord[];
-  siteGroups: SiteGroup[];
+  lines: InvoiceLine[];
   subtotal: number;
   tax: number;
   total: number;
@@ -52,7 +53,7 @@ export default function InvoicePage() {
     });
   }, [records, targetMonth]);
 
-  // Group by customer
+  // Group by customer, then aggregate by site × task
   const groups = useMemo<InvoiceGroup[]>(() => {
     const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
@@ -61,31 +62,35 @@ export default function InvoicePage() {
       map.get(key)!.push(r);
     }
     return Array.from(map.entries()).map(([customer, rows]) => {
-      const subtotal = rows.reduce(
-        (s, r) => s + (Number(r.sales.totalAmount) || 0),
-        0
-      );
-      const tax = Math.floor(subtotal * 0.1);
-      // Group by site
-      const siteMap = new Map<string, DailyRecord[]>();
+      // Aggregate by site × task
+      const lineMap = new Map<string, { site: string; task: string; count: number; totalAmount: number; unitPriceSum: number }>();
       for (const r of rows) {
-        const sk = r.site || "（現場未設定）";
-        if (!siteMap.has(sk)) siteMap.set(sk, []);
-        siteMap.get(sk)!.push(r);
+        const site = r.site || "（現場未設定）";
+        const task = r.task || "（業務未設定）";
+        const lk = `${site}\0${task}`;
+        const existing = lineMap.get(lk);
+        const amt = Number(r.sales.totalAmount) || 0;
+        const up = Number(r.sales.unitPrice) || 0;
+        if (existing) {
+          existing.count += 1;
+          existing.totalAmount += amt;
+          existing.unitPriceSum += up;
+        } else {
+          lineMap.set(lk, { site, task, count: 1, totalAmount: amt, unitPriceSum: up });
+        }
       }
-      const siteGroups: SiteGroup[] = Array.from(siteMap.entries()).map(([site, siteRows]) => ({
-        site,
-        rows: siteRows.sort((a, b) => a.task.localeCompare(b.task) || a.date.localeCompare(b.date)),
-        subtotal: siteRows.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0),
-      }));
-      return {
-        customer,
-        rows: rows.sort((a, b) => a.date.localeCompare(b.date)),
-        siteGroups,
-        subtotal,
-        tax,
-        total: subtotal + tax,
-      };
+      const lines: InvoiceLine[] = Array.from(lineMap.values())
+        .map((l) => ({
+          site: l.site,
+          task: l.task,
+          count: l.count,
+          unitPrice: l.count > 0 ? Math.round(l.unitPriceSum / l.count) : 0,
+          amount: l.totalAmount,
+        }))
+        .sort((a, b) => a.site.localeCompare(b.site) || a.task.localeCompare(b.task));
+      const subtotal = lines.reduce((s, l) => s + l.amount, 0);
+      const tax = Math.floor(subtotal * 0.1);
+      return { customer, lines, subtotal, tax, total: subtotal + tax };
     });
   }, [filtered]);
 
@@ -161,45 +166,26 @@ export default function InvoicePage() {
             <span className="font-medium">{monthLabel}分 作業費</span>
           </div>
 
-          {/* Line items grouped by site */}
+          {/* Line items */}
           <table className="w-full text-sm mb-6">
             <thead>
               <tr className="border-y-2 border-text/20 text-left text-xs text-muted">
-                <th className="py-2 px-2">稼働日</th>
-                <th className="py-2 px-2">スタッフ</th>
+                <th className="py-2 px-2">現場名</th>
                 <th className="py-2 px-2">業務</th>
-                <th className="py-2 px-2 text-right">請求金額</th>
+                <th className="py-2 px-2 text-right">人数</th>
+                <th className="py-2 px-2 text-right">単価</th>
+                <th className="py-2 px-2 text-right">金額</th>
               </tr>
             </thead>
             <tbody>
-              {group.siteGroups.map((sg) => (
-                <React.Fragment key={sg.site}>
-                  {/* Site header */}
-                  <tr>
-                    <td colSpan={4} className="py-2 px-2 font-bold text-xs bg-[#f8fafc] border-b border-border">
-                      {sg.site}
-                    </td>
-                  </tr>
-                  {sg.rows.map((r) => (
-                    <tr key={r.id} className="border-b border-border/50">
-                      <td className="py-2 px-2 font-mono text-xs">{r.date}</td>
-                      <td className="py-2 px-2">{r.staff}</td>
-                      <td className="py-2 px-2">{r.task}</td>
-                      <td className="py-2 px-2 text-right font-mono">
-                        ¥{(Number(r.sales.totalAmount) || 0).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Site subtotal */}
-                  <tr className="border-b border-border">
-                    <td colSpan={3} className="py-1.5 px-2 text-right text-xs text-muted">
-                      {sg.site} 小計
-                    </td>
-                    <td className="py-1.5 px-2 text-right font-mono text-xs font-bold">
-                      ¥{sg.subtotal.toLocaleString()}
-                    </td>
-                  </tr>
-                </React.Fragment>
+              {group.lines.map((l, i) => (
+                <tr key={`${l.site}-${l.task}-${i}`} className="border-b border-border/50">
+                  <td className="py-2 px-2">{l.site}</td>
+                  <td className="py-2 px-2">{l.task}</td>
+                  <td className="py-2 px-2 text-right font-mono">{l.count}</td>
+                  <td className="py-2 px-2 text-right font-mono">¥{l.unitPrice.toLocaleString()}</td>
+                  <td className="py-2 px-2 text-right font-mono">¥{l.amount.toLocaleString()}</td>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -283,7 +269,7 @@ export default function InvoicePage() {
               <div>
                 <div className="font-medium">{g.customer}</div>
                 <div className="text-sm text-muted mt-1">
-                  {g.rows.length} 件 ・ 小計 ¥{g.subtotal.toLocaleString()} ・
+                  {g.lines.length} 項目 ・ 小計 ¥{g.subtotal.toLocaleString()} ・
                   税込 ¥{g.total.toLocaleString()}
                 </div>
               </div>
