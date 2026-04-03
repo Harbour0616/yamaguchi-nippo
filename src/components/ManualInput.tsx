@@ -674,7 +674,7 @@ function SavedRecordsList({
             <select
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
-              className={`${inputCls} w-[150px]`}
+              className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent w-auto max-w-[160px]"
             >
               <option value="">すべて</option>
               {availableMonths.map((ym) => {
@@ -686,7 +686,7 @@ function SavedRecordsList({
             <select
               value={filterCustomer}
               onChange={(e) => setFilterCustomer(e.target.value)}
-              className={`${inputCls} w-[180px]`}
+              className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent w-auto max-w-[200px]"
             >
               <option value="">すべて</option>
               {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
