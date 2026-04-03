@@ -215,18 +215,6 @@ export default function ManualInput({ records, setRecords }: Props) {
                 </label>
 
                 <label className="flex items-center gap-1 text-xs text-muted">
-                  スタッフ
-                  <select
-                    value={rec.staff}
-                    onChange={(e) => updateField(rec.id, "staff", e.target.value)}
-                    className={`${inputCls} w-[120px]`}
-                  >
-                    <option value="">選択</option>
-                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1 text-xs text-muted">
                   形態
                   <select
                     value={rec.type}
@@ -272,6 +260,18 @@ export default function ManualInput({ records, setRecords }: Props) {
                   >
                     <option value="">選択</option>
                     {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                </label>
+
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  スタッフ
+                  <select
+                    value={rec.staff}
+                    onChange={(e) => updateField(rec.id, "staff", e.target.value)}
+                    className={`${inputCls} w-[120px]`}
+                  >
+                    <option value="">選択</option>
+                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                 </label>
               </div>
