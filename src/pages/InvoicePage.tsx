@@ -44,9 +44,7 @@ export default function InvoicePage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
-  const [invoiceDate, setInvoiceDate] = useState(() => getLastDayOfMonth(
-    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
-  ));
+  const invoiceDate = useMemo(() => getLastDayOfMonth(targetMonth), [targetMonth]);
   const [previewCustomer, setPreviewCustomer] = useState<string | null>(null);
   const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>(
     {}
@@ -281,16 +279,8 @@ export default function InvoicePage() {
           value={targetMonth}
           onChange={(e) => {
             setTargetMonth(e.target.value);
-            setInvoiceDate(getLastDayOfMonth(e.target.value));
             setInvoiceNumbers({});
           }}
-          className="bg-white border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
-        />
-        <label className="text-sm text-muted">請求日:</label>
-        <input
-          type="date"
-          value={invoiceDate}
-          onChange={(e) => setInvoiceDate(e.target.value)}
           className="bg-white border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
         />
         <span className="text-sm text-muted">
