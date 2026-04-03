@@ -9,6 +9,7 @@ export interface CompanyInfo {
   bankType: string;
   bankNumber: string;
   bankHolder: string;
+  invoiceNumber: string;
 }
 
 const STORAGE_KEY = "yamaguchi_company";
@@ -24,6 +25,7 @@ const DEFAULT: CompanyInfo = {
   bankType: "普通",
   bankNumber: "",
   bankHolder: "",
+  invoiceNumber: "",
 };
 
 export function loadCompanyInfo(): CompanyInfo {

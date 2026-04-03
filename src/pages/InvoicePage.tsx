@@ -157,6 +157,7 @@ export default function InvoicePage() {
               {company.address && <div>{company.address}</div>}
               {company.tel && <div>TEL: {company.tel}</div>}
               {company.fax && <div>FAX: {company.fax}</div>}
+              {company.invoiceNumber && <div>登録番号: {company.invoiceNumber}</div>}
             </div>
           </div>
 

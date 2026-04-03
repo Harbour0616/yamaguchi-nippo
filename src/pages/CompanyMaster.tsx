@@ -17,6 +17,7 @@ const FIELDS: { key: keyof CompanyInfo; label: string; placeholder: string }[] =
     { key: "bankType", label: "口座種別", placeholder: "普通" },
     { key: "bankNumber", label: "口座番号", placeholder: "1234567" },
     { key: "bankHolder", label: "口座名義", placeholder: "ヤマグチコウギョウ（カ" },
+    { key: "invoiceNumber", label: "登録番号（インボイス）", placeholder: "T1234567890123" },
   ];
 
 export default function CompanyMaster() {
