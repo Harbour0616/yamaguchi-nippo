@@ -11,9 +11,6 @@ interface StaffSummary {
   allowance: number;
   transport: number;
   grossPay: number;
-  mgmtFee: number;
-  insurance: number;
-  dormFee: number;
   withholdingTax: number;
   totalDeduction: number;
   netPay: number;
@@ -30,14 +27,11 @@ function aggregateStaff(staffName: string, rows: DailyRecord[]): StaffSummary {
   const transport = rows.reduce((s, r) => s + num(r.cost.transport), 0);
   const grossPay = basicWage + overtimePay + allowance + transport;
 
-  const mgmtFee = rows.reduce((s, r) => s + num(r.cost.mgmtFee), 0);
-  const insurance = rows.reduce((s, r) => s + num(r.cost.insurance), 0);
-  const dormFee = rows.reduce((s, r) => s + num(r.cost.dormFee), 0);
   const withholdingTax = rows.reduce(
     (s, r) => s + num(r.cost.withholdingTax),
     0
   );
-  const totalDeduction = mgmtFee + insurance + dormFee + withholdingTax;
+  const totalDeduction = withholdingTax;
 
   const netPay = grossPay - totalDeduction;
 
@@ -49,9 +43,6 @@ function aggregateStaff(staffName: string, rows: DailyRecord[]): StaffSummary {
     allowance,
     transport,
     grossPay,
-    mgmtFee,
-    insurance,
-    dormFee,
     withholdingTax,
     totalDeduction,
     netPay,
@@ -109,9 +100,6 @@ export default function PayslipPage() {
       { label: "交通費", value: summary.transport },
     ];
     const deductItems = [
-      { label: "管理費", value: summary.mgmtFee },
-      { label: "補償保険", value: summary.insurance },
-      { label: "寮費", value: summary.dormFee },
       { label: "源泉徴収税額", value: summary.withholdingTax },
     ];
 

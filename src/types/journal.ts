@@ -22,9 +22,6 @@ export interface CostRow {
   overtimePay: number | "";
   allowance: number | "";
   transport: number | "";
-  mgmtFee: number | "";
-  insurance: number | "";
-  dormFee: number | "";
   withholdingTax: number | "";
   paidSalary: number | "";
   isManualPaidSalary: boolean;
@@ -99,9 +96,6 @@ export function createEmptyCostRow(
     overtimePay: "",
     allowance: "",
     transport: "",
-    mgmtFee: "",
-    insurance: "",
-    dormFee: "",
     withholdingTax: "",
     paidSalary: "",
     isManualPaidSalary: false,

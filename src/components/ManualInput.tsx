@@ -326,15 +326,6 @@ export default function ManualInput({ records, setRecords }: Props) {
                     <Field label="交通費">
                       <input type="number" value={rec.cost.transport} onChange={numChange(updateCost, rec.id, "transport")} className={numCls} placeholder="0" />
                     </Field>
-                    <Field label="管理費">
-                      <input type="number" value={rec.cost.mgmtFee} onChange={numChange(updateCost, rec.id, "mgmtFee")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="補償保険">
-                      <input type="number" value={rec.cost.insurance} onChange={numChange(updateCost, rec.id, "insurance")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="寮費">
-                      <input type="number" value={rec.cost.dormFee} onChange={numChange(updateCost, rec.id, "dormFee")} className={numCls} placeholder="0" />
-                    </Field>
                     <Field label="源泉徴収税額">
                       <input type="number" value={rec.cost.withholdingTax} onChange={numChange(updateCost, rec.id, "withholdingTax")} className={numCls} placeholder="0" />
                     </Field>
