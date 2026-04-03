@@ -199,27 +199,6 @@ export default function ManualInput({ records, setRecords }: Props) {
     setSavedRecords(updateSavedRecord(rec));
   }, []);
 
-  const handleMigrateBasicWage = useCallback(() => {
-    if (!window.confirm("保存済み日報の基本給をスタッフマスタの単価で一括更新します。よろしいですか？")) return;
-    const all = loadSavedRecords();
-    const currentStaff = loadStaff();
-    let count = 0;
-    const updated = all.map((r) => {
-      if (!r.staff) return r;
-      const matched = currentStaff.find((s) => s.name === r.staff);
-      if (!matched?.unitPrice) return r;
-      const cost = { ...r.cost, basicWage: Number(matched.unitPrice) };
-      if (!cost.isManualPaidSalary) {
-        const paid = calcCostPaidSalary(cost);
-        cost.paidSalary = paid > 0 ? paid : "";
-      }
-      count++;
-      return { ...r, cost };
-    });
-    localStorage.setItem("yamaguchi_daily_records", JSON.stringify(updated));
-    setSavedRecords(updated);
-    window.alert(`${count}件更新しました`);
-  }, []);
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
@@ -393,21 +372,13 @@ export default function ManualInput({ records, setRecords }: Props) {
           ))}
         </div>
 
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={handleSaveRecords}
-            disabled={!records.some((r) => r.date && r.staff)}
-            className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            保存する
-          </button>
-          <button
-            onClick={handleMigrateBasicWage}
-            className="px-4 py-2 rounded-lg bg-surface border border-border text-text text-sm hover:bg-[rgba(0,0,0,0.03)] transition"
-          >
-            既存データ一括更新（基本給←スタッフ単価）
-          </button>
-        </div>
+        <button
+          onClick={handleSaveRecords}
+          disabled={!records.some((r) => r.date && r.staff)}
+          className="mb-6 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          保存する
+        </button>
       </section>
 
       {/* 入力済み一覧 */}
