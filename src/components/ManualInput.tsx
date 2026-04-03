@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { DailyRecord, SalesRow, CostRow, WorkType } from "../types/journal";
 import {
   createEmptyDailyRecord,
@@ -9,6 +9,7 @@ import { toJournalEntries } from "../utils/toJournal";
 import { loadCustomers } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
+import { loadSavedRecords, saveDailyRecords, removeSavedRecord } from "../data/dailyRecords";
 import JournalPreview from "./JournalPreview";
 
 interface Props {
@@ -20,6 +21,7 @@ export default function ManualInput({ records, setRecords }: Props) {
   const customers = useMemo(() => loadCustomers(), []);
   const sites = useMemo(() => loadSites(), []);
   const staffList = useMemo(() => loadStaff(), []);
+  const [savedRecords, setSavedRecords] = useState<DailyRecord[]>(loadSavedRecords);
 
   // --- Update helpers ---
 
@@ -108,6 +110,18 @@ export default function ManualInput({ records, setRecords }: Props) {
         }),
       ];
     });
+  }, []);
+
+  const handleSaveRecords = useCallback(() => {
+    const valid = records.filter((r) => r.date && r.staff);
+    if (valid.length === 0) return;
+    const updated = saveDailyRecords(valid);
+    setSavedRecords(updated);
+    setRecords([createEmptyDailyRecord()]);
+  }, [records, setRecords]);
+
+  const handleDeleteSaved = useCallback((id: string) => {
+    setSavedRecords(removeSavedRecord(id));
   }, []);
 
   const journals = toJournalEntries(records);
@@ -298,16 +312,77 @@ export default function ManualInput({ records, setRecords }: Props) {
           ))}
         </div>
 
-        <button
-          onClick={addRecord}
-          className="mb-6 px-4 py-2 rounded-lg bg-surface border border-border text-accent hover:bg-accent/10 transition text-sm"
-        >
-          ＋ レコードを追加
-        </button>
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={addRecord}
+            className="px-4 py-2 rounded-lg bg-surface border border-border text-accent hover:bg-accent/10 transition text-sm"
+          >
+            ＋ レコードを追加
+          </button>
+          <button
+            onClick={handleSaveRecords}
+            disabled={!records.some((r) => r.date && r.staff)}
+            className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            保存する
+          </button>
+        </div>
 
         <div className="border-t border-border pt-6 mt-6">
           <JournalPreview entries={journals} />
         </div>
+      </section>
+
+      {/* 入力済み一覧 */}
+      <section className="mt-8">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <span className="w-2 h-5 bg-accent rounded-full inline-block"></span>
+          入力済み一覧
+        </h2>
+        {savedRecords.length === 0 ? (
+          <p className="text-muted text-sm py-2">保存済みの日報はありません。</p>
+        ) : (
+          <>
+            <table className="w-full border border-border rounded-lg text-sm">
+              <thead>
+                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
+                  <th className="px-3 py-1.5">稼働日</th>
+                  <th className="px-3 py-1.5">スタッフ</th>
+                  <th className="px-3 py-1.5">顧客先</th>
+                  <th className="px-3 py-1.5">現場</th>
+                  <th className="px-3 py-1.5 text-right">売上金額</th>
+                  <th className="px-3 py-1.5 text-right">原価金額</th>
+                  <th className="px-3 py-1.5 w-12"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedRecords.map((r) => (
+                  <tr key={r.id} className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]">
+                    <td className="px-3 py-1.5 font-mono text-xs">{r.date || "-"}</td>
+                    <td className="px-3 py-1.5">{r.staff || "-"}</td>
+                    <td className="px-3 py-1.5 text-muted">{r.customer || "-"}</td>
+                    <td className="px-3 py-1.5">{r.site || "-"}</td>
+                    <td className="px-3 py-1.5 text-right font-mono text-xs">
+                      {r.sales.totalAmount ? Number(r.sales.totalAmount).toLocaleString() : "-"}
+                    </td>
+                    <td className="px-3 py-1.5 text-right font-mono text-xs">
+                      {r.cost.paidSalary ? Number(r.cost.paidSalary).toLocaleString() : "-"}
+                    </td>
+                    <td className="px-3 py-1.5 text-right">
+                      <button
+                        onClick={() => handleDeleteSaved(r.id)}
+                        className="text-muted hover:text-red-500 text-xs transition"
+                      >
+                        削除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み</p>
+          </>
+        )}
       </section>
     </div>
   );
