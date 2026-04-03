@@ -533,47 +533,72 @@ function SavedRecordsList({
             <span>原価合計: <span className="font-mono font-bold">¥{totalCost.toLocaleString()}</span></span>
           </div>
 
-          <table className="w-full border border-border rounded-lg text-sm">
-            <thead>
-              <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
-                <th className="px-3 py-1.5">稼働日</th>
-                <th className="px-3 py-1.5">スタッフ</th>
-                <th className="px-3 py-1.5">顧客先</th>
-                <th className="px-3 py-1.5">現場</th>
-                <th className="px-3 py-1.5 text-right">売上金額</th>
-                <th className="px-3 py-1.5 text-right">原価金額</th>
-                <th className="px-3 py-1.5 w-12"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
-                  onDoubleClick={() => setEditDraft({ ...r, sales: { ...r.sales }, cost: { ...r.cost } })}
-                >
-                  <td className="px-3 py-1.5 font-mono text-xs">{r.date || "-"}</td>
-                  <td className="px-3 py-1.5">{r.staff || "-"}</td>
-                  <td className="px-3 py-1.5 text-muted">{r.customer || "-"}</td>
-                  <td className="px-3 py-1.5">{r.site || "-"}</td>
-                  <td className="px-3 py-1.5 text-right font-mono text-xs">
-                    {r.sales.totalAmount ? Number(r.sales.totalAmount).toLocaleString() : "-"}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono text-xs">
-                    {r.cost.paidSalary ? Number(r.cost.paidSalary).toLocaleString() : "-"}
-                  </td>
-                  <td className="px-3 py-1.5 text-right">
-                    <button
-                      onClick={() => onDelete(r.id)}
-                      className="text-muted hover:text-red-500 text-xs transition"
-                    >
-                      削除
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-max w-full border border-border rounded-lg text-sm">
+              <thead>
+                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs whitespace-nowrap">
+                  <th className="px-2 py-1.5">稼働日</th>
+                  <th className="px-2 py-1.5">形態</th>
+                  <th className="px-2 py-1.5">業務</th>
+                  <th className="px-2 py-1.5">顧客先</th>
+                  <th className="px-2 py-1.5">現場</th>
+                  <th className="px-2 py-1.5">スタッフ</th>
+                  <th className="px-2 py-1.5 text-right">請求単価</th>
+                  <th className="px-2 py-1.5 text-right">人数</th>
+                  <th className="px-2 py-1.5 text-right">残業手当</th>
+                  <th className="px-2 py-1.5 text-right">手当支給額</th>
+                  <th className="px-2 py-1.5 text-right">請求交通費</th>
+                  <th className="px-2 py-1.5 text-right">請求金額</th>
+                  <th className="px-2 py-1.5 text-right">基本給</th>
+                  <th className="px-2 py-1.5 text-right">残業手当</th>
+                  <th className="px-2 py-1.5 text-right">各種手当</th>
+                  <th className="px-2 py-1.5 text-right">交通費</th>
+                  <th className="px-2 py-1.5 text-right">源泉徴収</th>
+                  <th className="px-2 py-1.5 text-right">支給給与</th>
+                  <th className="px-2 py-1.5 w-10"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((r) => {
+                  const fmt = (v: number | "") => (v && Number(v) ? Number(v).toLocaleString() : "-");
+                  return (
+                    <tr
+                      key={r.id}
+                      className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer whitespace-nowrap"
+                      onDoubleClick={() => setEditDraft({ ...r, sales: { ...r.sales }, cost: { ...r.cost } })}
+                    >
+                      <td className="px-2 py-1.5 font-mono text-xs">{r.date || "-"}</td>
+                      <td className="px-2 py-1.5 text-xs">{r.type || "-"}</td>
+                      <td className="px-2 py-1.5 text-xs">{r.task || "-"}</td>
+                      <td className="px-2 py-1.5 text-xs">{r.customer || "-"}</td>
+                      <td className="px-2 py-1.5 text-xs">{r.site || "-"}</td>
+                      <td className="px-2 py-1.5 text-xs">{r.staff || "-"}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.sales.unitPrice)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.sales.headcount)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.sales.overtimePay)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.sales.allowance)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.sales.transport)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs font-bold">{fmt(r.sales.totalAmount)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.cost.basicWage)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.cost.overtimePay)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.cost.allowance)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.cost.transport)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt(r.cost.withholdingTax)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-xs font-bold">{fmt(r.cost.paidSalary)}</td>
+                      <td className="px-2 py-1.5 text-right">
+                        <button
+                          onClick={() => onDelete(r.id)}
+                          className="text-muted hover:text-red-500 text-xs transition"
+                        >
+                          削除
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み ・ ダブルクリックで編集</p>
         </>
       )}
