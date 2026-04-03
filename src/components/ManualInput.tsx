@@ -5,10 +5,15 @@ import {
   calcSalesTotal,
   calcCostPaidSalary,
 } from "../types/journal";
-import { loadCustomers } from "../data/customers";
+import { loadCustomers, RATE_LABELS, type CustomerRates } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import { loadSavedRecords, saveDailyRecords, removeSavedRecord } from "../data/dailyRecords";
+
+const TASK_OPTIONS = RATE_LABELS.map((r) => r.label);
+const taskToRateKey = new Map<string, keyof CustomerRates>(
+  RATE_LABELS.map((r) => [r.label, r.key])
+);
 
 interface Props {
   records: DailyRecord[];
@@ -85,6 +90,32 @@ export default function ManualInput({ records, setRecords }: Props) {
       );
     },
     []
+  );
+
+  const handleTaskChange = useCallback(
+    (id: string, task: string) => {
+      setRecords((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          const updated = { ...r, task };
+          const rateKey = taskToRateKey.get(task);
+          if (rateKey && r.customer) {
+            const cust = customers.find((c) => c.name === r.customer);
+            const rate = cust?.rates?.[rateKey];
+            if (rate !== undefined && rate !== "" && !r.sales.unitPrice) {
+              const sales = { ...r.sales, unitPrice: Number(rate) };
+              if (!sales.isManualTotal) {
+                const total = calcSalesTotal(sales);
+                sales.totalAmount = total > 0 ? total : "";
+              }
+              updated.sales = sales;
+            }
+          }
+          return updated;
+        })
+      );
+    },
+    [customers]
   );
 
   const deleteRecord = useCallback((id: string) => {
@@ -174,13 +205,14 @@ export default function ManualInput({ records, setRecords }: Props) {
 
                 <label className="flex items-center gap-1 text-xs text-muted">
                   業務
-                  <input
-                    type="text"
+                  <select
                     value={rec.task}
-                    onChange={(e) => updateField(rec.id, "task", e.target.value)}
-                    className={`${inputCls} w-[100px]`}
-                    placeholder="業務"
-                  />
+                    onChange={(e) => handleTaskChange(rec.id, e.target.value)}
+                    className={`${inputCls} w-[140px]`}
+                  >
+                    <option value="">選択</option>
+                    {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
                 </label>
 
                 <label className="flex items-center gap-1 text-xs text-muted">
