@@ -364,57 +364,106 @@ export default function ManualInput({ records, setRecords }: Props) {
       </section>
 
       {/* 入力済み一覧 */}
-      <section className="mt-8">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <span className="w-2 h-5 bg-accent rounded-full inline-block"></span>
-          入力済み一覧
-        </h2>
-        {savedRecords.length === 0 ? (
-          <p className="text-muted text-sm py-2">保存済みの日報はありません。</p>
-        ) : (
-          <>
-            <table className="w-full border border-border rounded-lg text-sm">
-              <thead>
-                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
-                  <th className="px-3 py-1.5">稼働日</th>
-                  <th className="px-3 py-1.5">スタッフ</th>
-                  <th className="px-3 py-1.5">顧客先</th>
-                  <th className="px-3 py-1.5">現場</th>
-                  <th className="px-3 py-1.5 text-right">売上金額</th>
-                  <th className="px-3 py-1.5 text-right">原価金額</th>
-                  <th className="px-3 py-1.5 w-12"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {savedRecords.map((r) => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]">
-                    <td className="px-3 py-1.5 font-mono text-xs">{r.date || "-"}</td>
-                    <td className="px-3 py-1.5">{r.staff || "-"}</td>
-                    <td className="px-3 py-1.5 text-muted">{r.customer || "-"}</td>
-                    <td className="px-3 py-1.5">{r.site || "-"}</td>
-                    <td className="px-3 py-1.5 text-right font-mono text-xs">
-                      {r.sales.totalAmount ? Number(r.sales.totalAmount).toLocaleString() : "-"}
-                    </td>
-                    <td className="px-3 py-1.5 text-right font-mono text-xs">
-                      {r.cost.paidSalary ? Number(r.cost.paidSalary).toLocaleString() : "-"}
-                    </td>
-                    <td className="px-3 py-1.5 text-right">
-                      <button
-                        onClick={() => handleDeleteSaved(r.id)}
-                        className="text-muted hover:text-red-500 text-xs transition"
-                      >
-                        削除
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み</p>
-          </>
-        )}
-      </section>
+      <SavedRecordsList
+        savedRecords={savedRecords}
+        customers={customers}
+        inputCls={inputCls}
+        onDelete={handleDeleteSaved}
+      />
     </div>
+  );
+}
+
+/** 入力済み一覧（フィルター＋合計付き） */
+function SavedRecordsList({
+  savedRecords,
+  customers,
+  inputCls,
+  onDelete,
+}: {
+  savedRecords: DailyRecord[];
+  customers: { id: string; name: string }[];
+  inputCls: string;
+  onDelete: (id: string) => void;
+}) {
+  const [filterCustomer, setFilterCustomer] = useState("");
+
+  const filtered = filterCustomer
+    ? savedRecords.filter((r) => r.customer === filterCustomer)
+    : savedRecords;
+
+  const totalSales = filtered.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
+  const totalCost = filtered.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+        <span className="w-2 h-5 bg-accent rounded-full inline-block"></span>
+        入力済み一覧
+      </h2>
+      {savedRecords.length === 0 ? (
+        <p className="text-muted text-sm py-2">保存済みの日報はありません。</p>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 mb-3">
+            <label className="text-xs text-muted">顧客先:</label>
+            <select
+              value={filterCustomer}
+              onChange={(e) => setFilterCustomer(e.target.value)}
+              className={`${inputCls} w-[180px]`}
+            >
+              <option value="">すべて</option>
+              {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div className="flex gap-4 mb-3 text-sm">
+            <span className="text-muted">{filtered.length} 件</span>
+            <span>売上合計: <span className="font-mono font-bold">¥{totalSales.toLocaleString()}</span></span>
+            <span>原価合計: <span className="font-mono font-bold">¥{totalCost.toLocaleString()}</span></span>
+          </div>
+
+          <table className="w-full border border-border rounded-lg text-sm">
+            <thead>
+              <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
+                <th className="px-3 py-1.5">稼働日</th>
+                <th className="px-3 py-1.5">スタッフ</th>
+                <th className="px-3 py-1.5">顧客先</th>
+                <th className="px-3 py-1.5">現場</th>
+                <th className="px-3 py-1.5 text-right">売上金額</th>
+                <th className="px-3 py-1.5 text-right">原価金額</th>
+                <th className="px-3 py-1.5 w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => (
+                <tr key={r.id} className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]">
+                  <td className="px-3 py-1.5 font-mono text-xs">{r.date || "-"}</td>
+                  <td className="px-3 py-1.5">{r.staff || "-"}</td>
+                  <td className="px-3 py-1.5 text-muted">{r.customer || "-"}</td>
+                  <td className="px-3 py-1.5">{r.site || "-"}</td>
+                  <td className="px-3 py-1.5 text-right font-mono text-xs">
+                    {r.sales.totalAmount ? Number(r.sales.totalAmount).toLocaleString() : "-"}
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-mono text-xs">
+                    {r.cost.paidSalary ? Number(r.cost.paidSalary).toLocaleString() : "-"}
+                  </td>
+                  <td className="px-3 py-1.5 text-right">
+                    <button
+                      onClick={() => onDelete(r.id)}
+                      className="text-muted hover:text-red-500 text-xs transition"
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み</p>
+        </>
+      )}
+    </section>
   );
 }
 
