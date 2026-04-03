@@ -8,7 +8,7 @@ import {
 import { loadCustomers, RATE_LABELS, type CustomerRates } from "../data/customers";
 import { loadSites } from "../data/sites";
 import { loadStaff } from "../data/staff";
-import { loadSavedRecords, saveDailyRecords, removeSavedRecord } from "../data/dailyRecords";
+import { loadSavedRecords, saveDailyRecords, removeSavedRecord, updateSavedRecord } from "../data/dailyRecords";
 
 const TASK_OPTIONS = RATE_LABELS.map((r) => r.label);
 const taskToRateKey = new Map<string, keyof CustomerRates>(
@@ -171,6 +171,10 @@ export default function ManualInput({ records, setRecords }: Props) {
 
   const handleDeleteSaved = useCallback((id: string) => {
     setSavedRecords(removeSavedRecord(id));
+  }, []);
+
+  const handleUpdateSaved = useCallback((rec: DailyRecord) => {
+    setSavedRecords(updateSavedRecord(rec));
   }, []);
 
   const inputCls =
@@ -358,26 +362,39 @@ export default function ManualInput({ records, setRecords }: Props) {
       <SavedRecordsList
         savedRecords={savedRecords}
         customers={customers}
+        sites={sites}
+        staffList={staffList}
         inputCls={inputCls}
+        numCls={numCls}
         onDelete={handleDeleteSaved}
+        onUpdate={handleUpdateSaved}
       />
     </div>
   );
 }
 
-/** 入力済み一覧（フィルター＋合計付き） */
+/** 入力済み一覧（フィルター＋合計付き＋ダブルクリック編集モーダル） */
 function SavedRecordsList({
   savedRecords,
   customers,
+  sites,
+  staffList,
   inputCls,
+  numCls,
   onDelete,
+  onUpdate,
 }: {
   savedRecords: DailyRecord[];
-  customers: { id: string; name: string }[];
+  customers: { id: string; name: string; rates?: import("../data/customers").CustomerRates }[];
+  sites: { id: string; name: string; customer_name: string }[];
+  staffList: { id: string; name: string }[];
   inputCls: string;
+  numCls: string;
   onDelete: (id: string) => void;
+  onUpdate: (rec: DailyRecord) => void;
 }) {
   const [filterCustomer, setFilterCustomer] = useState("");
+  const [editDraft, setEditDraft] = useState<DailyRecord | null>(null);
 
   const filtered = filterCustomer
     ? savedRecords.filter((r) => r.customer === filterCustomer)
@@ -385,6 +402,108 @@ function SavedRecordsList({
 
   const totalSales = filtered.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
   const totalCost = filtered.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
+
+  // --- Modal helpers ---
+  const applyRateToRec = (rec: DailyRecord, customerName: string, task: string): DailyRecord => {
+    const rateKey = taskToRateKey.get(task);
+    if (!rateKey || !customerName) return rec;
+    const cust = customers.find((c) => c.name === customerName);
+    const rate = cust?.rates?.[rateKey];
+    if (rate === undefined || rate === "" || rec.sales.unitPrice) return rec;
+    const sales = { ...rec.sales, unitPrice: Number(rate) };
+    if (!sales.isManualTotal) {
+      const total = calcSalesTotal(sales);
+      sales.totalAmount = total > 0 ? total : "";
+    }
+    return { ...rec, sales };
+  };
+
+  const updateDraftField = (field: keyof DailyRecord, value: string) => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, [field]: value };
+      if (field === "type") {
+        updated.cost = {
+          ...updated.cost,
+          creditAccount: value === "出来高" ? "外注費未払金（仮）" : "未払費用",
+        };
+      }
+      return updated;
+    });
+  };
+
+  const updateDraftSales = (field: keyof SalesRow, value: number | "") => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      const sales = { ...prev.sales, [field]: value };
+      if (field === "totalAmount") {
+        sales.isManualTotal = true;
+      } else if (
+        !sales.isManualTotal &&
+        ["unitPrice", "headcount", "overtimePay", "allowance", "transport"].includes(field as string)
+      ) {
+        const total = calcSalesTotal(sales);
+        sales.totalAmount = total > 0 ? total : "";
+      }
+      return { ...prev, sales };
+    });
+  };
+
+  const updateDraftCost = (field: keyof CostRow, value: number | "") => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      const cost = { ...prev.cost, [field]: value };
+      if (field === "paidSalary") {
+        cost.isManualPaidSalary = true;
+      } else if (
+        !cost.isManualPaidSalary &&
+        ["basicWage", "overtimePay", "allowance", "transport"].includes(field as string)
+      ) {
+        const paid = calcCostPaidSalary(cost);
+        cost.paidSalary = paid > 0 ? paid : "";
+      }
+      return { ...prev, cost };
+    });
+  };
+
+  const handleDraftTaskChange = (task: string) => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      return applyRateToRec({ ...prev, task }, prev.customer, task);
+    });
+  };
+
+  const handleDraftCustomerChange = (customer: string) => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      return applyRateToRec({ ...prev, customer }, customer, prev.task);
+    });
+  };
+
+  const handleDraftSiteChange = (siteName: string) => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      let updated = { ...prev, site: siteName };
+      const matched = sites.find((s) => s.name === siteName);
+      if (matched?.customer_name) {
+        updated = { ...updated, customer: matched.customer_name };
+        updated = applyRateToRec(updated, matched.customer_name, prev.task);
+      }
+      return updated;
+    });
+  };
+
+  const numChangeModal = (
+    cb: (field: string, val: number | "") => void,
+    field: string
+  ) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    cb(field, e.target.value === "" ? "" : Number(e.target.value));
+
+  const handleSaveModal = () => {
+    if (!editDraft) return;
+    onUpdate(editDraft);
+    setEditDraft(null);
+  };
 
   return (
     <section className="mt-8">
@@ -428,7 +547,11 @@ function SavedRecordsList({
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.id} className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]">
+                <tr
+                  key={r.id}
+                  className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
+                  onDoubleClick={() => setEditDraft({ ...r, sales: { ...r.sales }, cost: { ...r.cost } })}
+                >
                   <td className="px-3 py-1.5 font-mono text-xs">{r.date || "-"}</td>
                   <td className="px-3 py-1.5">{r.staff || "-"}</td>
                   <td className="px-3 py-1.5 text-muted">{r.customer || "-"}</td>
@@ -451,8 +574,154 @@ function SavedRecordsList({
               ))}
             </tbody>
           </table>
-          <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み</p>
+          <p className="text-muted text-xs mt-2">{savedRecords.length} 件保存済み ・ ダブルクリックで編集</p>
         </>
+      )}
+
+      {/* 編集モーダル */}
+      {editDraft && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setEditDraft(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="text-base font-bold">日報編集</h3>
+              <button onClick={() => setEditDraft(null)} className="text-muted hover:text-text text-xl leading-none">×</button>
+            </div>
+
+            <div className="p-6">
+              {/* 共通フィールド */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  稼働日
+                  <input type="date" value={editDraft.date} onChange={(e) => updateDraftField("date", e.target.value)} className={`${inputCls} w-[140px]`} />
+                </label>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  形態
+                  <select value={editDraft.type} onChange={(e) => updateDraftField("type", e.target.value)} className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent">
+                    <option value="">選択</option>
+                    <option value="自社受">自社受</option>
+                    <option value="出来高">出来高</option>
+                    <option value="常用">常用</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  業務
+                  <select value={editDraft.task} onChange={(e) => handleDraftTaskChange(e.target.value)} className={`${inputCls} w-[140px]`}>
+                    <option value="">選択</option>
+                    {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  顧客先
+                  <select value={editDraft.customer} onChange={(e) => handleDraftCustomerChange(e.target.value)} className={`${inputCls} w-[140px]`}>
+                    <option value="">選択</option>
+                    {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  現場
+                  <select value={editDraft.site} onChange={(e) => handleDraftSiteChange(e.target.value)} className={`${inputCls} w-[160px]`}>
+                    <option value="">選択</option>
+                    {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1 text-xs text-muted">
+                  スタッフ
+                  <select value={editDraft.staff} onChange={(e) => updateDraftField("staff", e.target.value)} className={`${inputCls} w-[120px]`}>
+                    <option value="">選択</option>
+                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              {/* 売上 + 原価 横並び */}
+              <div className="flex">
+                {/* 売上 */}
+                <div className="flex-1 bg-[#eff6ff] p-3 rounded-l-lg">
+                  <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
+                  <div className="space-y-1.5">
+                    <Field label="請求単価">
+                      <input type="number" value={editDraft.sales.unitPrice} onChange={numChangeModal((_, v) => updateDraftSales("unitPrice", v), "unitPrice")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="人数">
+                      <input type="number" value={editDraft.sales.headcount} onChange={numChangeModal((_, v) => updateDraftSales("headcount", v), "headcount")} className={numCls} placeholder="1" />
+                    </Field>
+                    <Field label="残業手当">
+                      <input type="number" value={editDraft.sales.overtimePay} onChange={numChangeModal((_, v) => updateDraftSales("overtimePay", v), "overtimePay")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="手当支給額">
+                      <input type="number" value={editDraft.sales.allowance} onChange={numChangeModal((_, v) => updateDraftSales("allowance", v), "allowance")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="請求交通費">
+                      <input type="number" value={editDraft.sales.transport} onChange={numChangeModal((_, v) => updateDraftSales("transport", v), "transport")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="請求金額（税抜）" highlight>
+                      <input
+                        type="number"
+                        value={editDraft.sales.totalAmount}
+                        onChange={numChangeModal((_, v) => updateDraftSales("totalAmount", v), "totalAmount")}
+                        className={`${numCls} ${editDraft.sales.isManualTotal ? "ring-1 ring-amber-300" : ""}`}
+                        placeholder="自動"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* 原価 */}
+                <div className="flex-1 bg-[#fff7ed] p-3 rounded-r-lg">
+                  <div className="text-xs font-bold text-orange-600 mb-2">【原価】</div>
+                  <div className="space-y-1.5">
+                    <Field label="基本給">
+                      <input type="number" value={editDraft.cost.basicWage} onChange={numChangeModal((_, v) => updateDraftCost("basicWage", v), "basicWage")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="残業手当">
+                      <input type="number" value={editDraft.cost.overtimePay} onChange={numChangeModal((_, v) => updateDraftCost("overtimePay", v), "overtimePay")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="各種手当">
+                      <input type="number" value={editDraft.cost.allowance} onChange={numChangeModal((_, v) => updateDraftCost("allowance", v), "allowance")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="交通費">
+                      <input type="number" value={editDraft.cost.transport} onChange={numChangeModal((_, v) => updateDraftCost("transport", v), "transport")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="源泉徴収税額">
+                      <input type="number" value={editDraft.cost.withholdingTax} onChange={numChangeModal((_, v) => updateDraftCost("withholdingTax", v), "withholdingTax")} className={numCls} placeholder="0" />
+                    </Field>
+                    <Field label="支給給与" highlight>
+                      <input
+                        type="number"
+                        value={editDraft.cost.paidSalary}
+                        onChange={numChangeModal((_, v) => updateDraftCost("paidSalary", v), "paidSalary")}
+                        className={`${numCls} ${editDraft.cost.isManualPaidSalary ? "ring-1 ring-amber-300" : ""}`}
+                        placeholder="自動"
+                      />
+                    </Field>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* フッターボタン */}
+            <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+              <button
+                onClick={() => setEditDraft(null)}
+                className="px-4 py-2 rounded-lg bg-surface border border-border text-text text-sm hover:bg-[rgba(0,0,0,0.03)] transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleSaveModal}
+                className="px-6 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

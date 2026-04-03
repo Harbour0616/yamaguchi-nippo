@@ -19,6 +19,12 @@ export function saveDailyRecords(records: DailyRecord[]): DailyRecord[] {
   return updated;
 }
 
+export function updateSavedRecord(updated: DailyRecord): DailyRecord[] {
+  const records = loadSavedRecords().map((r) => (r.id === updated.id ? updated : r));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  return records;
+}
+
 export function removeSavedRecord(id: string): DailyRecord[] {
   const records = loadSavedRecords().filter((r) => r.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
