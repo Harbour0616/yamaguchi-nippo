@@ -27,12 +27,24 @@ function formatDate(d: Date): string {
   return `${y}年${m}月${day}日`;
 }
 
+/** 対象月(yyyy-MM)の末日をyyyy-MM-dd形式で返す */
+function getLastDayOfMonth(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  // 翌月の0日 = 当月の末日
+  const last = new Date(y, m, 0);
+  const dd = String(last.getDate()).padStart(2, "0");
+  return `${y}-${String(m).padStart(2, "0")}-${dd}`;
+}
+
 export default function InvoicePage() {
   const records = useMemo(() => loadSavedRecords(), []);
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [invoiceDate, setInvoiceDate] = useState(() => getLastDayOfMonth(
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
+  ));
   const [previewCustomer, setPreviewCustomer] = useState<string | null>(null);
   const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>(
     {}
@@ -134,7 +146,7 @@ export default function InvoicePage() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold tracking-wider mb-3">請求書</h1>
             <div className="text-sm text-muted">
-              請求日: {formatDate(new Date())}
+              請求日: {formatDate(new Date(invoiceDate + "T00:00:00"))}
             </div>
             <div className="text-sm text-muted">請求番号: {invoiceNo}</div>
           </div>
@@ -250,8 +262,16 @@ export default function InvoicePage() {
           value={targetMonth}
           onChange={(e) => {
             setTargetMonth(e.target.value);
+            setInvoiceDate(getLastDayOfMonth(e.target.value));
             setInvoiceNumbers({});
           }}
+          className="bg-white border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
+        />
+        <label className="text-sm text-muted">請求日:</label>
+        <input
+          type="date"
+          value={invoiceDate}
+          onChange={(e) => setInvoiceDate(e.target.value)}
           className="bg-white border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent"
         />
         <span className="text-sm text-muted">
