@@ -11,7 +11,7 @@ export function loadStaff(): Staff[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Staff[];
-    return parsed.map((s) => ({ unitPrice: "", ...s }));
+    return parsed.map((s) => ({ ...s, unitPrice: s.unitPrice ?? "" }));
   } catch {
     return [];
   }
