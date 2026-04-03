@@ -305,7 +305,7 @@ export default function ManualInput({ records, setRecords }: Props) {
               </div>
 
               {/* ===== 下段：売上 + 原価 横並び ===== */}
-              <div className="flex w-1/2">
+              <div className="flex w-fit">
                 {/* 売上 */}
                 <div className="flex-1 bg-[#eff6ff] p-3 border-r border-border">
                   <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
