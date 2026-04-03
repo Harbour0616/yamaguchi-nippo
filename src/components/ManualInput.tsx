@@ -221,6 +221,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                     onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
                     className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent"
                   >
+                    <option value="">選択</option>
                     <option value="自社受">自社受</option>
                     <option value="出来高">出来高</option>
                     <option value="常用">常用</option>

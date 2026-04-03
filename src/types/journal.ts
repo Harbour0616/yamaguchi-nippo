@@ -1,4 +1,4 @@
-export type WorkType = "自社受" | "出来高" | "常用";
+export type WorkType = "" | "自社受" | "出来高" | "常用";
 
 export type CreditAccount = "未払費用" | "外注費未払金（仮）" | "未払金";
 
@@ -134,9 +134,9 @@ export function createEmptyDailyRecord(
 ): DailyRecord {
   return {
     id: crypto.randomUUID(),
-    date: overrides?.date ?? "",
+    date: overrides?.date ?? new Date().toISOString().slice(0, 10),
     staff: overrides?.staff ?? "",
-    type: overrides?.type ?? "自社受",
+    type: overrides?.type ?? "",
     task: overrides?.task ?? "",
     customer: overrides?.customer ?? "",
     site: overrides?.site ?? "",
