@@ -2,10 +2,7 @@ import { useState, useMemo } from "react";
 import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
-
-interface Props {
-  records: DailyRecord[];
-}
+import { loadSavedRecords } from "../data/dailyRecords";
 
 interface InvoiceGroup {
   customer: string;
@@ -22,7 +19,8 @@ function formatDate(d: Date): string {
   return `${y}年${m}月${day}日`;
 }
 
-export default function InvoicePage({ records }: Props) {
+export default function InvoicePage() {
+  const records = useMemo(() => loadSavedRecords(), []);
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;

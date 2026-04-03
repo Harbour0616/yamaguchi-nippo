@@ -129,12 +129,12 @@ function App() {
             <ManualInput records={records} setRecords={setRecords} />
           )}
           {page === "excel" && <ExcelImport />}
-          {page === "invoice" && <InvoicePage records={records} />}
+          {page === "invoice" && <InvoicePage />}
           {page === "customers" && <CustomerMaster />}
 
           {page === "staff" && <StaffMaster />}
           {page === "company" && <CompanyMaster />}
-          {page === "payslip" && <PayslipPage records={records} />}
+          {page === "payslip" && <PayslipPage />}
         </div>
       </main>
     </div>
