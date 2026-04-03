@@ -216,160 +216,165 @@ export default function ManualInput({ records, setRecords }: Props) {
           日報入力（売上＋原価）
         </h2>
 
-        {/* Cards */}
-        <div className="space-y-3 mb-4">
-          {records.map((rec) => (
-            <div
-              key={rec.id}
-              className="bg-white border border-border rounded-lg shadow-sm overflow-hidden"
-            >
-              {/* ===== 上段：共通フィールド ===== */}
-              <div className="bg-[#f8fafc] px-3 py-2 flex flex-wrap items-center gap-2 border-b border-border">
-                <button
-                  onClick={() => deleteRecord(rec.id)}
-                  className="text-muted hover:text-red-500 text-lg leading-none px-1"
-                  title="削除"
-                >×</button>
+        <div className="flex gap-4 items-start">
+          {/* Cards */}
+          <div className="space-y-3 mb-4 flex-1 min-w-0">
+            {records.map((rec) => (
+              <div
+                key={rec.id}
+                className="bg-white border border-border rounded-lg shadow-sm overflow-hidden"
+              >
+                {/* ===== 上段：共通フィールド ===== */}
+                <div className="bg-[#f8fafc] px-3 py-2 flex flex-wrap items-center gap-2 border-b border-border">
+                  <button
+                    onClick={() => deleteRecord(rec.id)}
+                    className="text-muted hover:text-red-500 text-lg leading-none px-1"
+                    title="削除"
+                  >×</button>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  稼働日
-                  <input
-                    type="date"
-                    value={rec.date}
-                    onChange={(e) => updateField(rec.id, "date", e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  />
-                </label>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    稼働日
+                    <input
+                      type="date"
+                      value={rec.date}
+                      onChange={(e) => updateField(rec.id, "date", e.target.value)}
+                      className={`${inputCls} w-[140px]`}
+                    />
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  形態
-                  <select
-                    value={rec.type}
-                    onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
-                    className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent"
-                  >
-                    <option value="">選択</option>
-                    <option value="自社受">自社受</option>
-                    <option value="出来高">出来高</option>
-                    <option value="常用">常用</option>
-                  </select>
-                </label>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    形態
+                    <select
+                      value={rec.type}
+                      onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
+                      className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent"
+                    >
+                      <option value="">選択</option>
+                      <option value="自社受">自社受</option>
+                      <option value="出来高">出来高</option>
+                      <option value="常用">常用</option>
+                    </select>
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  業務
-                  <select
-                    value={rec.task}
-                    onChange={(e) => handleTaskChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  >
-                    <option value="">選択</option>
-                    {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </label>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    業務
+                    <select
+                      value={rec.task}
+                      onChange={(e) => handleTaskChange(rec.id, e.target.value)}
+                      className={`${inputCls} w-[140px]`}
+                    >
+                      <option value="">選択</option>
+                      {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  顧客先
-                  <select
-                    value={rec.customer}
-                    onChange={(e) => handleCustomerChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  >
-                    <option value="">選択</option>
-                    {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-                  </select>
-                </label>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    顧客先
+                    <select
+                      value={rec.customer}
+                      onChange={(e) => handleCustomerChange(rec.id, e.target.value)}
+                      className={`${inputCls} w-[140px]`}
+                    >
+                      <option value="">選択</option>
+                      {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  現場
-                  <select
-                    value={rec.site}
-                    onChange={(e) => handleSiteChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[160px]`}
-                  >
-                    <option value="">選択</option>
-                    {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </label>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    現場
+                    <select
+                      value={rec.site}
+                      onChange={(e) => handleSiteChange(rec.id, e.target.value)}
+                      className={`${inputCls} w-[160px]`}
+                    >
+                      <option value="">選択</option>
+                      {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  スタッフ
-                  <select
-                    value={rec.staff}
-                    onChange={(e) => handleStaffChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[120px]`}
-                  >
-                    <option value="">選択</option>
-                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </label>
-              </div>
-
-              {/* ===== 下段：売上 + 原価 横並び ===== */}
-              <div className="flex w-fit">
-                {/* 売上 */}
-                <div className="flex-1 bg-[#eff6ff] p-3 border-r border-border">
-                  <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
-                  <div className="space-y-1.5">
-                    <Field label="請求単価">
-                      <input type="number" value={rec.sales.unitPrice} onChange={numChange(updateSales, rec.id, "unitPrice")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="人数">
-                      <input type="number" value={rec.sales.headcount} onChange={numChange(updateSales, rec.id, "headcount")} className={numCls} placeholder="1" />
-                    </Field>
-                    <Field label="残業手当">
-                      <input type="number" value={rec.sales.overtimePay} onChange={numChange(updateSales, rec.id, "overtimePay")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="手当支給額">
-                      <input type="number" value={rec.sales.allowance} onChange={numChange(updateSales, rec.id, "allowance")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="請求交通費">
-                      <input type="number" value={rec.sales.transport} onChange={numChange(updateSales, rec.id, "transport")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="請求金額（税抜）" highlight>
-                      <input
-                        type="number"
-                        value={rec.sales.totalAmount}
-                        onChange={numChange(updateSales, rec.id, "totalAmount")}
-                        className={`${numCls} ${rec.sales.isManualTotal ? "ring-1 ring-amber-300" : ""}`}
-                        placeholder="自動"
-                      />
-                    </Field>
-                  </div>
+                  <label className="flex items-center gap-1 text-xs text-muted">
+                    スタッフ
+                    <select
+                      value={rec.staff}
+                      onChange={(e) => handleStaffChange(rec.id, e.target.value)}
+                      className={`${inputCls} w-[120px]`}
+                    >
+                      <option value="">選択</option>
+                      {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </label>
                 </div>
 
-                {/* 原価 */}
-                <div className="flex-1 bg-[#fff7ed] p-3">
-                  <div className="text-xs font-bold text-orange-600 mb-2">【原価】</div>
-                  <div className="space-y-1.5">
-                    <Field label="基本給">
-                      <input type="number" value={rec.cost.basicWage} onChange={numChange(updateCost, rec.id, "basicWage")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="残業手当">
-                      <input type="number" value={rec.cost.overtimePay} onChange={numChange(updateCost, rec.id, "overtimePay")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="各種手当">
-                      <input type="number" value={rec.cost.allowance} onChange={numChange(updateCost, rec.id, "allowance")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="交通費">
-                      <input type="number" value={rec.cost.transport} onChange={numChange(updateCost, rec.id, "transport")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="源泉徴収税額">
-                      <input type="number" value={rec.cost.withholdingTax} onChange={numChange(updateCost, rec.id, "withholdingTax")} className={numCls} placeholder="0" />
-                    </Field>
-                    <Field label="支給給与" highlight>
-                      <input
-                        type="number"
-                        value={rec.cost.paidSalary}
-                        onChange={numChange(updateCost, rec.id, "paidSalary")}
-                        className={`${numCls} ${rec.cost.isManualPaidSalary ? "ring-1 ring-amber-300" : ""}`}
-                        placeholder="自動"
-                      />
-                    </Field>
+                {/* ===== 下段：売上 + 原価 横並び ===== */}
+                <div className="flex w-fit">
+                  {/* 売上 */}
+                  <div className="flex-1 bg-[#eff6ff] p-3 border-r border-border">
+                    <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
+                    <div className="space-y-1.5">
+                      <Field label="請求単価">
+                        <input type="number" value={rec.sales.unitPrice} onChange={numChange(updateSales, rec.id, "unitPrice")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="人数">
+                        <input type="number" value={rec.sales.headcount} onChange={numChange(updateSales, rec.id, "headcount")} className={numCls} placeholder="1" />
+                      </Field>
+                      <Field label="残業手当">
+                        <input type="number" value={rec.sales.overtimePay} onChange={numChange(updateSales, rec.id, "overtimePay")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="手当支給額">
+                        <input type="number" value={rec.sales.allowance} onChange={numChange(updateSales, rec.id, "allowance")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="請求交通費">
+                        <input type="number" value={rec.sales.transport} onChange={numChange(updateSales, rec.id, "transport")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="請求金額（税抜）" highlight>
+                        <input
+                          type="number"
+                          value={rec.sales.totalAmount}
+                          onChange={numChange(updateSales, rec.id, "totalAmount")}
+                          className={`${numCls} ${rec.sales.isManualTotal ? "ring-1 ring-amber-300" : ""}`}
+                          placeholder="自動"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  {/* 原価 */}
+                  <div className="flex-1 bg-[#fff7ed] p-3">
+                    <div className="text-xs font-bold text-orange-600 mb-2">【原価】</div>
+                    <div className="space-y-1.5">
+                      <Field label="基本給">
+                        <input type="number" value={rec.cost.basicWage} onChange={numChange(updateCost, rec.id, "basicWage")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="残業手当">
+                        <input type="number" value={rec.cost.overtimePay} onChange={numChange(updateCost, rec.id, "overtimePay")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="各種手当">
+                        <input type="number" value={rec.cost.allowance} onChange={numChange(updateCost, rec.id, "allowance")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="交通費">
+                        <input type="number" value={rec.cost.transport} onChange={numChange(updateCost, rec.id, "transport")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="源泉徴収税額">
+                        <input type="number" value={rec.cost.withholdingTax} onChange={numChange(updateCost, rec.id, "withholdingTax")} className={numCls} placeholder="0" />
+                      </Field>
+                      <Field label="支給給与" highlight>
+                        <input
+                          type="number"
+                          value={rec.cost.paidSalary}
+                          onChange={numChange(updateCost, rec.id, "paidSalary")}
+                          className={`${numCls} ${rec.cost.isManualPaidSalary ? "ring-1 ring-amber-300" : ""}`}
+                          placeholder="自動"
+                        />
+                      </Field>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* 日次サマリー */}
+          <DailySummary savedRecords={savedRecords} inputCls={inputCls} />
         </div>
 
         <button
@@ -392,6 +397,58 @@ export default function ManualInput({ records, setRecords }: Props) {
         onDelete={handleDeleteSaved}
         onUpdate={handleUpdateSaved}
       />
+    </div>
+  );
+}
+
+/** 日次サマリーパネル */
+function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[]; inputCls: string }) {
+  const [summaryDate, setSummaryDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const summary = useMemo(() => {
+    const dayRecords = savedRecords.filter((r) => r.date === summaryDate);
+    if (dayRecords.length === 0) return null;
+    const sales = dayRecords.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
+    const cost = dayRecords.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
+    const profit = sales - cost;
+    const profitRate = sales > 0 ? (profit / sales) * 100 : 0;
+    return { count: dayRecords.length, sales, cost, profit, profitRate };
+  }, [savedRecords, summaryDate]);
+
+  const fmt = (v: number) => `¥${v.toLocaleString()}`;
+
+  return (
+    <div className="w-[220px] shrink-0 bg-white border border-border rounded-lg shadow-sm p-4 sticky top-4">
+      <div className="text-xs font-bold text-text mb-3">日次サマリー</div>
+      <input
+        type="date"
+        value={summaryDate}
+        onChange={(e) => setSummaryDate(e.target.value)}
+        className={`${inputCls} mb-3`}
+      />
+      {summary ? (
+        <div className="space-y-2 text-sm">
+          <div className="text-xs text-muted">{summary.count} 件</div>
+          <div className="flex justify-between">
+            <span className="text-muted text-xs">売上合計</span>
+            <span className="font-mono font-bold text-blue-600">{fmt(summary.sales)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted text-xs">原価合計</span>
+            <span className="font-mono font-bold text-orange-600">{fmt(summary.cost)}</span>
+          </div>
+          <div className="border-t border-border pt-2 flex justify-between">
+            <span className="text-muted text-xs">粗利</span>
+            <span className={`font-mono font-bold ${summary.profit >= 0 ? "text-green-600" : "text-red-500"}`}>{fmt(summary.profit)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted text-xs">粗利率</span>
+            <span className={`font-mono font-bold ${summary.profitRate >= 0 ? "text-green-600" : "text-red-500"}`}>{summary.profitRate.toFixed(1)}%</span>
+          </div>
+        </div>
+      ) : (
+        <div className="text-muted text-xs">-</div>
+      )}
     </div>
   );
 }
