@@ -36,58 +36,8 @@ export default function SiteMaster() {
         現場登録
       </h2>
       <div className="flex gap-6 items-start">
-        {/* 現場一覧 */}
-        <div className="flex-1 min-w-0">
-          {sites.length === 0 ? (
-            <p className="text-muted text-sm py-2">
-              現場が未登録です。右のフォームから追加してください。
-            </p>
-          ) : (
-            <table className="w-full border border-border rounded-lg text-sm">
-              <thead>
-                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
-                  <th className="px-3 py-1.5">現場名</th>
-                  <th className="px-3 py-1.5">顧客先名</th>
-                  <th className="px-3 py-1.5">着工日</th>
-                  <th className="px-3 py-1.5">完工日</th>
-                  <th className="px-3 py-1.5 w-12"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sites.map((s) => (
-                  <tr
-                    key={s.id}
-                    className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]"
-                  >
-                    <td className="px-3 py-1.5">{s.name}</td>
-                    <td className="px-3 py-1.5 text-muted">
-                      {s.customer_name || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 font-mono text-xs">
-                      {s.startDate || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 font-mono text-xs text-muted">
-                      {s.endDate || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 text-right">
-                      <button
-                        onClick={() => handleRemoveSite(s.id)}
-                        className="text-muted hover:text-red-500 text-xs transition"
-                      >
-                        削除
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          <p className="text-muted text-xs mt-2">
-            {sites.length} 件登録済み
-          </p>
-        </div>
         {/* 追加フォーム */}
-        <div className="flex flex-col gap-2 w-[280px] shrink-0">
+        <div className="flex flex-col gap-2 w-[320px] shrink-0">
           <input
             type="text"
             value={newSiteName}
@@ -137,6 +87,56 @@ export default function SiteMaster() {
           >
             追加
           </button>
+        </div>
+        {/* 現場一覧 */}
+        <div className="flex-1 min-w-0">
+          {sites.length === 0 ? (
+            <p className="text-muted text-sm py-2">
+              現場が未登録です。左のフォームから追加してください。
+            </p>
+          ) : (
+            <table className="w-full border border-border rounded-lg text-sm">
+              <thead>
+                <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
+                  <th className="px-3 py-1.5">現場名</th>
+                  <th className="px-3 py-1.5">顧客先名</th>
+                  <th className="px-3 py-1.5">着工日</th>
+                  <th className="px-3 py-1.5">完工日</th>
+                  <th className="px-3 py-1.5 w-12"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {sites.map((s) => (
+                  <tr
+                    key={s.id}
+                    className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]"
+                  >
+                    <td className="px-3 py-1.5">{s.name}</td>
+                    <td className="px-3 py-1.5 text-muted">
+                      {s.customer_name || "-"}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-xs">
+                      {s.startDate || "-"}
+                    </td>
+                    <td className="px-3 py-1.5 font-mono text-xs text-muted">
+                      {s.endDate || "-"}
+                    </td>
+                    <td className="px-3 py-1.5 text-right">
+                      <button
+                        onClick={() => handleRemoveSite(s.id)}
+                        className="text-muted hover:text-red-500 text-xs transition"
+                      >
+                        削除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="text-muted text-xs mt-2">
+            {sites.length} 件登録済み
+          </p>
         </div>
       </div>
     </div>
