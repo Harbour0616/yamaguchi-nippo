@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   loadCustomers,
   addCustomer,
@@ -10,10 +10,33 @@ import {
   type CustomerRates,
 } from "../data/customers";
 
+const RATE_COUNT = RATE_LABELS.length;
+
 export default function CustomerMaster() {
   const [customers, setCustomers] = useState<Customer[]>(loadCustomers);
   const [name, setName] = useState("");
   const [newRates, setNewRates] = useState<CustomerRates>({ ...emptyRates });
+
+  // --- Refs for Enter-key navigation ---
+  const newRateRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const newAddBtnRef = useRef<HTMLButtonElement | null>(null);
+  const editRateRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const editSaveBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const handleEnterKey = (
+    e: React.KeyboardEvent,
+    index: number,
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+    lastRef: React.MutableRefObject<HTMLButtonElement | null>,
+  ) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (index < RATE_COUNT - 1) {
+      refs.current[index + 1]?.focus();
+    } else {
+      lastRef.current?.focus();
+    }
+  };
 
   // --- Inline edit ---
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,6 +58,7 @@ export default function CustomerMaster() {
   const startEdit = useCallback((c: Customer) => {
     setEditingId(c.id);
     setEditDraft({ name: c.name, rates: { ...emptyRates, ...c.rates } });
+    editRateRefs.current = [];
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -65,22 +89,29 @@ export default function CustomerMaster() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                newRateRefs.current[0]?.focus();
+              }
+            }}
             placeholder="顧客先名を入力"
             className={inputCls}
           />
           <div className="border border-border rounded-lg p-3 bg-[#f8fafc]">
             <div className="text-xs font-bold text-muted mb-2">単価設定</div>
             <div className="grid grid-cols-2 gap-2">
-              {RATE_LABELS.map(({ key, label }) => (
+              {RATE_LABELS.map(({ key, label }, i) => (
                 <div key={key}>
                   <label className="text-[11px] text-muted">{label}</label>
                   <input
+                    ref={(el) => { newRateRefs.current[i] = el; }}
                     type="number"
                     value={newRates[key]}
                     onChange={(e) =>
                       setNewRates((r) => ({ ...r, [key]: e.target.value === "" ? "" : Number(e.target.value) }))
                     }
+                    onKeyDown={(e) => handleEnterKey(e, i, newRateRefs, newAddBtnRef)}
                     className={numCls}
                     placeholder="0"
                   />
@@ -89,6 +120,7 @@ export default function CustomerMaster() {
             </div>
           </div>
           <button
+            ref={newAddBtnRef}
             onClick={handleAdd}
             disabled={!name.trim()}
             className="w-full px-4 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
@@ -113,18 +145,25 @@ export default function CustomerMaster() {
                         type="text"
                         value={editDraft.name}
                         onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            editRateRefs.current[0]?.focus();
+                          }
+                        }}
                         className={`${inputCls} flex-1`}
                       />
-                      <button onClick={saveEdit} className="text-accent hover:text-accent/80 text-xs font-medium transition">保存</button>
+                      <button ref={editSaveBtnRef} onClick={saveEdit} className="text-accent hover:text-accent/80 text-xs font-medium transition">保存</button>
                       <button onClick={cancelEdit} className="text-muted hover:text-text text-xs transition">キャンセル</button>
                     </div>
                     <div className="border border-border rounded-lg p-3 bg-white">
                       <div className="text-xs font-bold text-muted mb-2">単価設定</div>
                       <div className="grid grid-cols-2 gap-2">
-                        {RATE_LABELS.map(({ key, label }) => (
+                        {RATE_LABELS.map(({ key, label }, i) => (
                           <div key={key}>
                             <label className="text-[11px] text-muted">{label}</label>
                             <input
+                              ref={(el) => { editRateRefs.current[i] = el; }}
                               type="number"
                               value={editDraft.rates[key]}
                               onChange={(e) =>
@@ -133,6 +172,7 @@ export default function CustomerMaster() {
                                   rates: { ...d.rates, [key]: e.target.value === "" ? "" : Number(e.target.value) },
                                 }))
                               }
+                              onKeyDown={(e) => handleEnterKey(e, i, editRateRefs, editSaveBtnRef)}
                               className={numCls}
                               placeholder="0"
                             />
