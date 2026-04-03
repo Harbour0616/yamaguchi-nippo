@@ -136,6 +136,28 @@ export default function ManualInput({ records, setRecords }: Props) {
     [applyRate]
   );
 
+  const handleStaffChange = useCallback(
+    (id: string, staffName: string) => {
+      setRecords((prev) =>
+        prev.map((r) => {
+          if (r.id !== id) return r;
+          let updated = { ...r, staff: staffName };
+          const matched = staffList.find((s) => s.name === staffName);
+          if (matched?.unitPrice) {
+            const cost = { ...updated.cost, basicWage: Number(matched.unitPrice) };
+            if (!cost.isManualPaidSalary) {
+              const paid = calcCostPaidSalary(cost);
+              cost.paidSalary = paid > 0 ? paid : "";
+            }
+            updated = { ...updated, cost };
+          }
+          return updated;
+        })
+      );
+    },
+    [staffList]
+  );
+
   const handleSiteChange = useCallback(
     (id: string, siteName: string) => {
       setRecords((prev) =>
@@ -272,7 +294,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                   スタッフ
                   <select
                     value={rec.staff}
-                    onChange={(e) => updateField(rec.id, "staff", e.target.value)}
+                    onChange={(e) => handleStaffChange(rec.id, e.target.value)}
                     className={`${inputCls} w-[120px]`}
                   >
                     <option value="">選択</option>
@@ -387,7 +409,7 @@ function SavedRecordsList({
   savedRecords: DailyRecord[];
   customers: { id: string; name: string; rates?: import("../data/customers").CustomerRates }[];
   sites: { id: string; name: string; customer_name: string }[];
-  staffList: { id: string; name: string }[];
+  staffList: { id: string; name: string; unitPrice: number | "" }[];
   inputCls: string;
   numCls: string;
   onDelete: (id: string) => void;
@@ -477,6 +499,23 @@ function SavedRecordsList({
     setEditDraft((prev) => {
       if (!prev) return prev;
       return applyRateToRec({ ...prev, customer }, customer, prev.task);
+    });
+  };
+
+  const handleDraftStaffChange = (staffName: string) => {
+    setEditDraft((prev) => {
+      if (!prev) return prev;
+      let updated = { ...prev, staff: staffName };
+      const matched = staffList.find((s) => s.name === staffName);
+      if (matched?.unitPrice) {
+        const cost = { ...updated.cost, basicWage: Number(matched.unitPrice) };
+        if (!cost.isManualPaidSalary) {
+          const paid = calcCostPaidSalary(cost);
+          cost.paidSalary = paid > 0 ? paid : "";
+        }
+        updated = { ...updated, cost };
+      }
+      return updated;
     });
   };
 
@@ -657,7 +696,7 @@ function SavedRecordsList({
                 </label>
                 <label className="flex items-center gap-1 text-xs text-muted">
                   スタッフ
-                  <select value={editDraft.staff} onChange={(e) => updateDraftField("staff", e.target.value)} className={`${inputCls} w-[120px]`}>
+                  <select value={editDraft.staff} onChange={(e) => handleDraftStaffChange(e.target.value)} className={`${inputCls} w-[120px]`}>
                     <option value="">選択</option>
                     {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
