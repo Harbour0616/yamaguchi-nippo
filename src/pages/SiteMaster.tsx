@@ -101,7 +101,8 @@ export default function SiteMaster() {
             >
               <option value="">選択</option>
               <option value="常用">常用</option>
-              <option value="請負">請負</option>
+              <option value="自社受">自社受</option>
+              <option value="出来高">出来高</option>
             </select>
           </div>
           <div className="flex gap-2">
@@ -179,7 +180,8 @@ export default function SiteMaster() {
                         >
                           <option value="">選択</option>
                           <option value="常用">常用</option>
-                          <option value="請負">請負</option>
+                          <option value="自社受">自社受</option>
+                          <option value="出来高">出来高</option>
                         </select>
                       </td>
                       <td className="px-2 py-1">

@@ -1,4 +1,4 @@
-export type SiteWorkType = "" | "常用" | "請負";
+export type SiteWorkType = "" | "常用" | "自社受" | "出来高";
 
 export interface Site {
   id: string;
