@@ -1,8 +1,11 @@
+export type SiteWorkType = "" | "常用" | "請負";
+
 export interface Site {
   id: string;
   name: string;
   customer_id: string;
   customer_name: string;
+  workType: SiteWorkType;
   startDate: string;
   endDate: string;
 }
@@ -13,7 +16,7 @@ export function loadSites(): Site[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as Site[];
+    return (JSON.parse(raw) as Site[]).map((s) => ({ ...s, workType: s.workType ?? "" }));
   } catch {
     return [];
   }
@@ -27,6 +30,7 @@ export function addSite(
   name: string,
   customerId: string,
   customerName: string,
+  workType: SiteWorkType,
   startDate: string,
   endDate: string
 ): Site[] {
@@ -40,6 +44,7 @@ export function addSite(
       name: trimmed,
       customer_id: customerId,
       customer_name: customerName.trim(),
+      workType,
       startDate,
       endDate,
     },

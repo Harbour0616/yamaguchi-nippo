@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo } from "react";
 import { loadCustomers } from "../data/customers";
-import { loadSites, addSite, removeSite, updateSite, type Site } from "../data/sites";
+import { loadSites, addSite, removeSite, updateSite, type Site, type SiteWorkType } from "../data/sites";
 
 export default function SiteMaster() {
   const customers = useMemo(() => loadCustomers(), []);
   const [sites, setSites] = useState<Site[]>(loadSites);
   const [newSiteName, setNewSiteName] = useState("");
   const [newSiteCustomer, setNewSiteCustomer] = useState("");
+  const [newWorkType, setNewWorkType] = useState<SiteWorkType>("");
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
@@ -15,12 +16,13 @@ export default function SiteMaster() {
     const trimmedCustomer = newSiteCustomer.trim();
     if (!trimmedName || !newStartDate) return;
     const matched = customers.find((c) => c.name === trimmedCustomer);
-    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newStartDate, newEndDate));
+    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newWorkType, newStartDate, newEndDate));
     setNewSiteName("");
     setNewSiteCustomer("");
+    setNewWorkType("");
     setNewStartDate("");
     setNewEndDate("");
-  }, [newSiteName, newSiteCustomer, newStartDate, newEndDate, customers]);
+  }, [newSiteName, newSiteCustomer, newWorkType, newStartDate, newEndDate, customers]);
 
   const handleRemoveSite = useCallback((id: string) => {
     setSites(removeSite(id));
@@ -29,11 +31,11 @@ export default function SiteMaster() {
 
   // --- Inline edit ---
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState({ name: "", customer_name: "", startDate: "", endDate: "" });
+  const [editDraft, setEditDraft] = useState({ name: "", customer_name: "", workType: "" as SiteWorkType, startDate: "", endDate: "" });
 
   const startEdit = useCallback((s: Site) => {
     setEditingId(s.id);
-    setEditDraft({ name: s.name, customer_name: s.customer_name, startDate: s.startDate, endDate: s.endDate });
+    setEditDraft({ name: s.name, customer_name: s.customer_name, workType: s.workType, startDate: s.startDate, endDate: s.endDate });
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -47,6 +49,7 @@ export default function SiteMaster() {
       name: editDraft.name.trim(),
       customer_id: matched?.id ?? "",
       customer_name: editDraft.customer_name.trim(),
+      workType: editDraft.workType,
       startDate: editDraft.startDate,
       endDate: editDraft.endDate,
     }));
@@ -89,6 +92,18 @@ export default function SiteMaster() {
               <option key={c.id} value={c.name} />
             ))}
           </datalist>
+          <div>
+            <label className="text-xs text-muted">形態</label>
+            <select
+              value={newWorkType}
+              onChange={(e) => setNewWorkType(e.target.value as SiteWorkType)}
+              className={inputCls}
+            >
+              <option value="">選択</option>
+              <option value="常用">常用</option>
+              <option value="請負">請負</option>
+            </select>
+          </div>
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="text-xs text-muted">着工日 *</label>
@@ -129,6 +144,7 @@ export default function SiteMaster() {
                 <tr className="border-b border-border bg-[#f8fafc] text-muted text-left text-xs">
                   <th className="px-3 py-1.5">現場名</th>
                   <th className="px-3 py-1.5">顧客先名</th>
+                  <th className="px-3 py-1.5">形態</th>
                   <th className="px-3 py-1.5">着工日</th>
                   <th className="px-3 py-1.5">完工日</th>
                   <th className="px-3 py-1.5 w-12"></th>
@@ -154,6 +170,17 @@ export default function SiteMaster() {
                           onChange={(e) => setEditDraft((d) => ({ ...d, customer_name: e.target.value }))}
                           className={editInputCls}
                         />
+                      </td>
+                      <td className="px-2 py-1">
+                        <select
+                          value={editDraft.workType}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, workType: e.target.value as SiteWorkType }))}
+                          className={editInputCls}
+                        >
+                          <option value="">選択</option>
+                          <option value="常用">常用</option>
+                          <option value="請負">請負</option>
+                        </select>
                       </td>
                       <td className="px-2 py-1">
                         <input
@@ -185,6 +212,9 @@ export default function SiteMaster() {
                       <td className="px-3 py-1.5">{s.name}</td>
                       <td className="px-3 py-1.5 text-muted">
                         {s.customer_name || "-"}
+                      </td>
+                      <td className="px-3 py-1.5 text-xs">
+                        {s.workType || "-"}
                       </td>
                       <td className="px-3 py-1.5 font-mono text-xs">
                         {s.startDate || "-"}
