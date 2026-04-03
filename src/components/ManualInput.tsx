@@ -92,9 +92,10 @@ export default function ManualInput({ records, setRecords }: Props) {
     []
   );
 
-  /** 顧客名＋業務名から単価を適用（unitPrice未入力時のみ） */
+  /** 顧客名＋業務名から単価を適用（unitPrice未入力時のみ、自社受・出来高は除外） */
   const applyRate = useCallback(
     (rec: DailyRecord, customerName: string, task: string): DailyRecord => {
+      if (rec.type === "自社受" || rec.type === "出来高") return rec;
       const rateKey = taskToRateKey.get(task);
       if (!rateKey || !customerName) return rec;
       const cust = customers.find((c) => c.name === customerName);
@@ -316,21 +317,22 @@ export default function ManualInput({ records, setRecords }: Props) {
                 {/* 売上 */}
                 <div className="flex-1 bg-[#eff6ff] p-3 border-r border-border">
                   <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
+                  {(() => { const isUke = rec.type === "自社受" || rec.type === "出来高"; const disabledCls = isUke ? `${numCls} bg-gray-100 text-muted cursor-not-allowed` : numCls; return (
                   <div className="space-y-1.5">
                     <Field label="請求単価">
-                      <input type="number" value={rec.sales.unitPrice} onChange={numChange(updateSales, rec.id, "unitPrice")} className={numCls} placeholder="0" />
+                      <input type="number" value={rec.sales.unitPrice} onChange={numChange(updateSales, rec.id, "unitPrice")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="人数">
-                      <input type="number" value={rec.sales.headcount} onChange={numChange(updateSales, rec.id, "headcount")} className={numCls} placeholder="1" />
+                      <input type="number" value={rec.sales.headcount} onChange={numChange(updateSales, rec.id, "headcount")} className={disabledCls} placeholder="1" disabled={isUke} />
                     </Field>
                     <Field label="残業手当">
-                      <input type="number" value={rec.sales.overtimePay} onChange={numChange(updateSales, rec.id, "overtimePay")} className={numCls} placeholder="0" />
+                      <input type="number" value={rec.sales.overtimePay} onChange={numChange(updateSales, rec.id, "overtimePay")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="手当支給額">
-                      <input type="number" value={rec.sales.allowance} onChange={numChange(updateSales, rec.id, "allowance")} className={numCls} placeholder="0" />
+                      <input type="number" value={rec.sales.allowance} onChange={numChange(updateSales, rec.id, "allowance")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="請求交通費">
-                      <input type="number" value={rec.sales.transport} onChange={numChange(updateSales, rec.id, "transport")} className={numCls} placeholder="0" />
+                      <input type="number" value={rec.sales.transport} onChange={numChange(updateSales, rec.id, "transport")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="請求金額（税抜）" highlight>
                       <input
@@ -342,6 +344,7 @@ export default function ManualInput({ records, setRecords }: Props) {
                       />
                     </Field>
                   </div>
+                  ); })()}
                 </div>
 
                 {/* 原価 */}
@@ -513,6 +516,7 @@ function SavedRecordsList({
 
   // --- Modal helpers ---
   const applyRateToRec = (rec: DailyRecord, customerName: string, task: string): DailyRecord => {
+    if (rec.type === "自社受" || rec.type === "出来高") return rec;
     const rateKey = taskToRateKey.get(task);
     if (!rateKey || !customerName) return rec;
     const cust = customers.find((c) => c.name === customerName);
@@ -808,21 +812,22 @@ function SavedRecordsList({
                 {/* 売上 */}
                 <div className="flex-1 bg-[#eff6ff] p-3 rounded-l-lg">
                   <div className="text-xs font-bold text-blue-600 mb-2">【売上】</div>
+                  {(() => { const isUke = editDraft.type === "自社受" || editDraft.type === "出来高"; const disabledCls = isUke ? `${numCls} bg-gray-100 text-muted cursor-not-allowed` : numCls; return (
                   <div className="space-y-1.5">
                     <Field label="請求単価">
-                      <input type="number" value={editDraft.sales.unitPrice} onChange={numChangeModal((_, v) => updateDraftSales("unitPrice", v), "unitPrice")} className={numCls} placeholder="0" />
+                      <input type="number" value={editDraft.sales.unitPrice} onChange={numChangeModal((_, v) => updateDraftSales("unitPrice", v), "unitPrice")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="人数">
-                      <input type="number" value={editDraft.sales.headcount} onChange={numChangeModal((_, v) => updateDraftSales("headcount", v), "headcount")} className={numCls} placeholder="1" />
+                      <input type="number" value={editDraft.sales.headcount} onChange={numChangeModal((_, v) => updateDraftSales("headcount", v), "headcount")} className={disabledCls} placeholder="1" disabled={isUke} />
                     </Field>
                     <Field label="残業手当">
-                      <input type="number" value={editDraft.sales.overtimePay} onChange={numChangeModal((_, v) => updateDraftSales("overtimePay", v), "overtimePay")} className={numCls} placeholder="0" />
+                      <input type="number" value={editDraft.sales.overtimePay} onChange={numChangeModal((_, v) => updateDraftSales("overtimePay", v), "overtimePay")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="手当支給額">
-                      <input type="number" value={editDraft.sales.allowance} onChange={numChangeModal((_, v) => updateDraftSales("allowance", v), "allowance")} className={numCls} placeholder="0" />
+                      <input type="number" value={editDraft.sales.allowance} onChange={numChangeModal((_, v) => updateDraftSales("allowance", v), "allowance")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="請求交通費">
-                      <input type="number" value={editDraft.sales.transport} onChange={numChangeModal((_, v) => updateDraftSales("transport", v), "transport")} className={numCls} placeholder="0" />
+                      <input type="number" value={editDraft.sales.transport} onChange={numChangeModal((_, v) => updateDraftSales("transport", v), "transport")} className={disabledCls} placeholder="0" disabled={isUke} />
                     </Field>
                     <Field label="請求金額（税抜）" highlight>
                       <input
@@ -834,6 +839,7 @@ function SavedRecordsList({
                       />
                     </Field>
                   </div>
+                  ); })()}
                 </div>
 
                 {/* 原価 */}
