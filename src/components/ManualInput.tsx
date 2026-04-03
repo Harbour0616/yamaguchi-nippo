@@ -28,24 +28,39 @@ export default function ManualInput({ records, setRecords }: Props) {
 
   // --- Update helpers ---
 
+  /** 自社受・出来高時に現場の請求金額を売上totalAmountにセット */
+  const applySiteBilling = useCallback(
+    (rec: DailyRecord, siteName: string): DailyRecord => {
+      if (rec.type !== "自社受" && rec.type !== "出来高") return rec;
+      const matched = sites.find((s) => s.name === siteName);
+      const amount = matched?.billingAmount ? Number(matched.billingAmount) : 0;
+      const sales = { ...rec.sales, totalAmount: amount > 0 ? amount : ("" as number | ""), isManualTotal: amount > 0 };
+      return { ...rec, sales };
+    },
+    [sites]
+  );
+
   const updateField = useCallback(
     (id: string, field: keyof DailyRecord, value: string) => {
       setRecords((prev) =>
         prev.map((r) => {
           if (r.id !== id) return r;
-          const updated = { ...r, [field]: value };
+          let updated = { ...r, [field]: value };
           if (field === "type") {
             updated.cost = {
               ...updated.cost,
               creditAccount:
                 value === "出来高" ? "外注費未払金（仮）" : "未払費用",
             };
+            if ((value === "自社受" || value === "出来高") && updated.site) {
+              updated = applySiteBilling(updated, updated.site);
+            }
           }
           return updated;
         })
       );
     },
-    []
+    [applySiteBilling]
   );
 
   const updateSales = useCallback(
@@ -170,11 +185,12 @@ export default function ManualInput({ records, setRecords }: Props) {
             updated = { ...updated, customer: matched.customer_name };
             updated = applyRate(updated, matched.customer_name, r.task);
           }
+          updated = applySiteBilling(updated, siteName);
           return updated;
         })
       );
     },
-    [sites, applyRate]
+    [sites, applyRate, applySiteBilling]
   );
 
   const resetRecord = useCallback((id: string) => {
@@ -486,7 +502,7 @@ function SavedRecordsList({
 }: {
   savedRecords: DailyRecord[];
   customers: { id: string; name: string; rates?: import("../data/customers").CustomerRates }[];
-  sites: { id: string; name: string; customer_name: string }[];
+  sites: { id: string; name: string; customer_name: string; billingAmount: number | "" }[];
   staffList: { id: string; name: string; unitPrice: number | "" }[];
   inputCls: string;
   numCls: string;
@@ -533,12 +549,15 @@ function SavedRecordsList({
   const updateDraftField = (field: keyof DailyRecord, value: string) => {
     setEditDraft((prev) => {
       if (!prev) return prev;
-      const updated = { ...prev, [field]: value };
+      let updated = { ...prev, [field]: value };
       if (field === "type") {
         updated.cost = {
           ...updated.cost,
           creditAccount: value === "出来高" ? "外注費未払金（仮）" : "未払費用",
         };
+        if ((value === "自社受" || value === "出来高") && updated.site) {
+          updated = applyDraftSiteBilling(updated, updated.site);
+        }
       }
       return updated;
     });
@@ -609,6 +628,14 @@ function SavedRecordsList({
     });
   };
 
+  const applyDraftSiteBilling = (rec: DailyRecord, siteName: string): DailyRecord => {
+    if (rec.type !== "自社受" && rec.type !== "出来高") return rec;
+    const matched = sites.find((s) => s.name === siteName);
+    const amount = matched?.billingAmount ? Number(matched.billingAmount) : 0;
+    const sales = { ...rec.sales, totalAmount: amount > 0 ? amount : ("" as number | ""), isManualTotal: amount > 0 };
+    return { ...rec, sales };
+  };
+
   const handleDraftSiteChange = (siteName: string) => {
     setEditDraft((prev) => {
       if (!prev) return prev;
@@ -618,6 +645,7 @@ function SavedRecordsList({
         updated = { ...updated, customer: matched.customer_name };
         updated = applyRateToRec(updated, matched.customer_name, prev.task);
       }
+      updated = applyDraftSiteBilling(updated, siteName);
       return updated;
     });
   };
