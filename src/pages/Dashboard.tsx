@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { loadSavedRecords } from "../data/dailyRecords";
+import { loadSites } from "../data/sites";
+import { calcSalesBySite } from "../utils/calcSales";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -214,6 +216,7 @@ type ViewTab = "monthly" | "customer" | "site";
 /* ═══════════════════════════════════════════════════ */
 export default function Dashboard() {
   const records = useMemo(() => loadSavedRecords(), []);
+  const siteMaster = useMemo(() => loadSites(), []);
   const [filterMonth, setFilterMonth] = useState("");
   const [viewTab, setViewTab] = useState<ViewTab>("monthly");
   const [unit, setUnit] = useState<"yen" | "k">("yen");
@@ -247,42 +250,44 @@ export default function Dashboard() {
 
   /* aggregate by site */
   const siteRows = useMemo<SiteRow[]>(() => {
-    const map = new Map<
-      string,
-      { customer: string; sales: number; cost: number; count: number }
-    >();
+    // 売上: calcSalesBySite で常用/自社受・出来高を区別
+    const salesBySite = calcSalesBySite(filteredRecords, siteMaster);
+    // 原価・件数・顧客は従来通り積み上げ
+    const costMap = new Map<string, { customer: string; cost: number; count: number }>();
     for (const r of filteredRecords) {
       const site = r.site || "（現場未設定）";
-      const sales = Number(r.sales.totalAmount) || 0;
       const cost = Number(r.cost.paidSalary) || 0;
-      const existing = map.get(site);
+      const existing = costMap.get(site);
       if (existing) {
-        existing.sales += sales;
         existing.cost += cost;
         existing.count += 1;
       } else {
-        map.set(site, { customer: r.customer || "（未設定）", sales, cost, count: 1 });
+        costMap.set(site, { customer: r.customer || "（未設定）", cost, count: 1 });
       }
     }
-    return Array.from(map.entries())
-      .map(([site, d]) => {
-        const profit = d.sales - d.cost;
-        const rate = d.sales > 0 ? (profit / d.sales) * 100 : 0;
+    // マージ
+    const allSites = new Set([...salesBySite.keys(), ...costMap.keys()]);
+    return Array.from(allSites)
+      .map((site) => {
+        const sales = salesBySite.get(site) || 0;
+        const c = costMap.get(site) || { customer: "（未設定）", cost: 0, count: 0 };
+        const profit = sales - c.cost;
+        const rate = sales > 0 ? (profit / sales) * 100 : 0;
         const { level, reason } = alertFor(rate, profit);
         return {
           site,
-          customer: d.customer,
-          sales: d.sales,
-          cost: d.cost,
+          customer: c.customer,
+          sales,
+          cost: c.cost,
           profit,
           rate,
-          count: d.count,
+          count: c.count,
           alertLevel: level,
           alertReason: reason,
         };
       })
       .sort((a, b) => a.rate - b.rate);
-  }, [filteredRecords]);
+  }, [filteredRecords, siteMaster]);
 
   /* alert filter */
   const filtered = useMemo(() => {

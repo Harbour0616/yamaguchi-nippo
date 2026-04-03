@@ -6,9 +6,10 @@ import {
   calcCostPaidSalary,
 } from "../types/journal";
 import { loadCustomers, RATE_LABELS, type CustomerRates } from "../data/customers";
-import { loadSites } from "../data/sites";
+import { loadSites, type Site } from "../data/sites";
 import { loadStaff } from "../data/staff";
 import { loadSavedRecords, saveDailyRecords, removeSavedRecord, updateSavedRecord } from "../data/dailyRecords";
+import { calcTotalSales } from "../utils/calcSales";
 
 const TASK_OPTIONS = RATE_LABELS.map((r) => r.label);
 const taskToRateKey = new Map<string, keyof CustomerRates>(
@@ -502,7 +503,7 @@ function SavedRecordsList({
 }: {
   savedRecords: DailyRecord[];
   customers: { id: string; name: string; rates?: import("../data/customers").CustomerRates }[];
-  sites: { id: string; name: string; customer_name: string; billingAmount: number | "" }[];
+  sites: Site[];
   staffList: { id: string; name: string; unitPrice: number | "" }[];
   inputCls: string;
   numCls: string;
@@ -527,7 +528,7 @@ function SavedRecordsList({
     return true;
   });
 
-  const totalSales = filtered.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
+  const totalSales = useMemo(() => calcTotalSales(filtered, sites), [filtered, sites]);
   const totalCost = filtered.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
 
   // --- Modal helpers ---

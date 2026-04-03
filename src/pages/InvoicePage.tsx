@@ -3,6 +3,7 @@ import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
 import { loadSavedRecords } from "../data/dailyRecords";
+import { loadSites } from "../data/sites";
 
 interface InvoiceLine {
   site: string;
@@ -38,6 +39,7 @@ function getLastDayOfMonth(ym: string): string {
 
 export default function InvoicePage() {
   const records = useMemo(() => loadSavedRecords(), []);
+  const siteMaster = useMemo(() => loadSites(), []);
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -56,17 +58,20 @@ export default function InvoicePage() {
   // Filter records by target month
   const filtered = useMemo(() => {
     return records.filter((r) => {
-      if (
-        !r.date ||
-        r.sales.totalAmount === "" ||
-        Number(r.sales.totalAmount) <= 0
-      )
-        return false;
-      return r.date.startsWith(targetMonth);
+      if (!r.date) return false;
+      if (!r.date.startsWith(targetMonth)) return false;
+      // 常用: 売上がある日報のみ
+      if (r.type !== "自社受" && r.type !== "出来高") {
+        if (r.sales.totalAmount === "" || Number(r.sales.totalAmount) <= 0)
+          return false;
+      }
+      return true;
     });
   }, [records, targetMonth]);
 
   // Group by customer, then aggregate by site × task
+  // 常用 → 日報の請求金額を積み上げ
+  // 自社受・出来高 → 現場マスタの請求金額を現場ごとに1回だけ計上
   const groups = useMemo<InvoiceGroup[]>(() => {
     const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
@@ -75,21 +80,35 @@ export default function InvoicePage() {
       map.get(key)!.push(r);
     }
     return Array.from(map.entries()).map(([customer, rows]) => {
-      // Aggregate by site × task
       const lineMap = new Map<string, { site: string; task: string; count: number; totalAmount: number; unitPriceSum: number }>();
+      const countedSites = new Set<string>();
+
       for (const r of rows) {
         const site = r.site || "（現場未設定）";
         const task = r.task || "（業務未設定）";
-        const lk = `${site}\0${task}`;
-        const existing = lineMap.get(lk);
-        const amt = Number(r.sales.totalAmount) || 0;
-        const up = Number(r.sales.unitPrice) || 0;
-        if (existing) {
-          existing.count += 1;
-          existing.totalAmount += amt;
-          existing.unitPriceSum += up;
+
+        if (r.type === "自社受" || r.type === "出来高") {
+          // 現場マスタの請求金額を1回だけ計上
+          if (!r.site || countedSites.has(r.site)) continue;
+          countedSites.add(r.site);
+          const matched = siteMaster.find((s) => s.name === r.site);
+          const billing = matched?.billingAmount ? Number(matched.billingAmount) : 0;
+          if (billing <= 0) continue;
+          const lk = `${site}\0${task}`;
+          lineMap.set(lk, { site, task, count: 1, totalAmount: billing, unitPriceSum: billing });
         } else {
-          lineMap.set(lk, { site, task, count: 1, totalAmount: amt, unitPriceSum: up });
+          // 常用: 日報の請求金額を積み上げ
+          const lk = `${site}\0${task}`;
+          const existing = lineMap.get(lk);
+          const amt = Number(r.sales.totalAmount) || 0;
+          const up = Number(r.sales.unitPrice) || 0;
+          if (existing) {
+            existing.count += 1;
+            existing.totalAmount += amt;
+            existing.unitPriceSum += up;
+          } else {
+            lineMap.set(lk, { site, task, count: 1, totalAmount: amt, unitPriceSum: up });
+          }
         }
       }
       const lines: InvoiceLine[] = Array.from(lineMap.values())
@@ -105,7 +124,7 @@ export default function InvoicePage() {
       const tax = Math.floor(subtotal * 0.1);
       return { customer, lines, subtotal, tax, total: subtotal + tax };
     });
-  }, [filtered]);
+  }, [filtered, siteMaster]);
 
   const [ymYear, ymMonth] = targetMonth.split("-");
   const monthLabel = `${ymYear}年${Number(ymMonth)}月`;
