@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { loadCustomers } from "../data/customers";
-import { loadSites, addSite, removeSite, type Site } from "../data/sites";
+import { loadSites, addSite, removeSite, updateSite, type Site } from "../data/sites";
 
 export default function SiteMaster() {
   const customers = useMemo(() => loadCustomers(), []);
@@ -24,10 +24,39 @@ export default function SiteMaster() {
 
   const handleRemoveSite = useCallback((id: string) => {
     setSites(removeSite(id));
+    setEditingId(null);
   }, []);
+
+  // --- Inline edit ---
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ name: "", customer_name: "", startDate: "", endDate: "" });
+
+  const startEdit = useCallback((s: Site) => {
+    setEditingId(s.id);
+    setEditDraft({ name: s.name, customer_name: s.customer_name, startDate: s.startDate, endDate: s.endDate });
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  const saveEdit = useCallback(() => {
+    if (!editingId || !editDraft.name.trim() || !editDraft.startDate) return;
+    const matched = customers.find((c) => c.name === editDraft.customer_name.trim());
+    setSites(updateSite(editingId, {
+      name: editDraft.name.trim(),
+      customer_id: matched?.id ?? "",
+      customer_name: editDraft.customer_name.trim(),
+      startDate: editDraft.startDate,
+      endDate: editDraft.endDate,
+    }));
+    setEditingId(null);
+  }, [editingId, editDraft, customers]);
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
+  const editInputCls =
+    "w-full bg-white border border-accent/40 rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
 
   return (
     <div>
@@ -106,31 +135,74 @@ export default function SiteMaster() {
                 </tr>
               </thead>
               <tbody>
-                {sites.map((s) => (
-                  <tr
-                    key={s.id}
-                    className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)]"
-                  >
-                    <td className="px-3 py-1.5">{s.name}</td>
-                    <td className="px-3 py-1.5 text-muted">
-                      {s.customer_name || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 font-mono text-xs">
-                      {s.startDate || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 font-mono text-xs text-muted">
-                      {s.endDate || "-"}
-                    </td>
-                    <td className="px-3 py-1.5 text-right">
-                      <button
-                        onClick={() => handleRemoveSite(s.id)}
-                        className="text-muted hover:text-red-500 text-xs transition"
-                      >
-                        削除
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {sites.map((s) =>
+                  editingId === s.id ? (
+                    <tr key={s.id} className="border-b border-border/50 bg-accent/5">
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          value={editDraft.name}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                          className={editInputCls}
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
+                          type="text"
+                          list="site-customer-list"
+                          value={editDraft.customer_name}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, customer_name: e.target.value }))}
+                          className={editInputCls}
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
+                          type="date"
+                          value={editDraft.startDate}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, startDate: e.target.value }))}
+                          className={editInputCls}
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
+                          type="date"
+                          value={editDraft.endDate}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, endDate: e.target.value }))}
+                          className={editInputCls}
+                        />
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        <button onClick={saveEdit} className="text-accent hover:text-accent/80 text-xs font-medium mr-2 transition">保存</button>
+                        <button onClick={cancelEdit} className="text-muted hover:text-text text-xs transition">キャンセル</button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr
+                      key={s.id}
+                      className="border-b border-border/50 hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
+                      onClick={() => startEdit(s)}
+                    >
+                      <td className="px-3 py-1.5">{s.name}</td>
+                      <td className="px-3 py-1.5 text-muted">
+                        {s.customer_name || "-"}
+                      </td>
+                      <td className="px-3 py-1.5 font-mono text-xs">
+                        {s.startDate || "-"}
+                      </td>
+                      <td className="px-3 py-1.5 font-mono text-xs text-muted">
+                        {s.endDate || "-"}
+                      </td>
+                      <td className="px-3 py-1.5 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRemoveSite(s.id); }}
+                          className="text-muted hover:text-red-500 text-xs transition"
+                        >
+                          削除
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           )}

@@ -48,6 +48,12 @@ export function addSite(
   return updated;
 }
 
+export function updateSite(id: string, patch: Partial<Omit<Site, "id">>): Site[] {
+  const sites = loadSites().map((s) => (s.id === id ? { ...s, ...patch } : s));
+  saveSites(sites);
+  return sites;
+}
+
 export function removeSite(id: string): Site[] {
   const sites = loadSites().filter((s) => s.id !== id);
   saveSites(sites);
