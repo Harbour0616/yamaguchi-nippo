@@ -6,6 +6,7 @@ export interface Site {
   customer_id: string;
   customer_name: string;
   workType: SiteWorkType;
+  billingAmount: number | "";
   startDate: string;
   endDate: string;
 }
@@ -16,7 +17,11 @@ export function loadSites(): Site[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return (JSON.parse(raw) as Site[]).map((s) => ({ ...s, workType: s.workType ?? "" }));
+    return (JSON.parse(raw) as Site[]).map((s) => ({
+      ...s,
+      workType: s.workType ?? "",
+      billingAmount: s.billingAmount ?? "",
+    }));
   } catch {
     return [];
   }
@@ -31,6 +36,7 @@ export function addSite(
   customerId: string,
   customerName: string,
   workType: SiteWorkType,
+  billingAmount: number | "",
   startDate: string,
   endDate: string
 ): Site[] {
@@ -45,6 +51,7 @@ export function addSite(
       customer_id: customerId,
       customer_name: customerName.trim(),
       workType,
+      billingAmount,
       startDate,
       endDate,
     },

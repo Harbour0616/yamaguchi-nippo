@@ -8,6 +8,7 @@ export default function SiteMaster() {
   const [newSiteName, setNewSiteName] = useState("");
   const [newSiteCustomer, setNewSiteCustomer] = useState("");
   const [newWorkType, setNewWorkType] = useState<SiteWorkType>("");
+  const [newBillingAmount, setNewBillingAmount] = useState<number | "">("");
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
@@ -16,13 +17,14 @@ export default function SiteMaster() {
     const trimmedCustomer = newSiteCustomer.trim();
     if (!trimmedName || !newStartDate) return;
     const matched = customers.find((c) => c.name === trimmedCustomer);
-    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newWorkType, newStartDate, newEndDate));
+    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newWorkType, newWorkType === "常用" ? "" : newBillingAmount, newStartDate, newEndDate));
     setNewSiteName("");
     setNewSiteCustomer("");
     setNewWorkType("");
+    setNewBillingAmount("");
     setNewStartDate("");
     setNewEndDate("");
-  }, [newSiteName, newSiteCustomer, newWorkType, newStartDate, newEndDate, customers]);
+  }, [newSiteName, newSiteCustomer, newWorkType, newBillingAmount, newStartDate, newEndDate, customers]);
 
   const handleRemoveSite = useCallback((id: string) => {
     setSites(removeSite(id));
@@ -31,11 +33,11 @@ export default function SiteMaster() {
 
   // --- Inline edit ---
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState({ name: "", customer_name: "", workType: "" as SiteWorkType, startDate: "", endDate: "" });
+  const [editDraft, setEditDraft] = useState({ name: "", customer_name: "", workType: "" as SiteWorkType, billingAmount: "" as number | "", startDate: "", endDate: "" });
 
   const startEdit = useCallback((s: Site) => {
     setEditingId(s.id);
-    setEditDraft({ name: s.name, customer_name: s.customer_name, workType: s.workType, startDate: s.startDate, endDate: s.endDate });
+    setEditDraft({ name: s.name, customer_name: s.customer_name, workType: s.workType, billingAmount: s.billingAmount, startDate: s.startDate, endDate: s.endDate });
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -50,6 +52,7 @@ export default function SiteMaster() {
       customer_id: matched?.id ?? "",
       customer_name: editDraft.customer_name.trim(),
       workType: editDraft.workType,
+      billingAmount: editDraft.workType === "常用" ? "" : editDraft.billingAmount,
       startDate: editDraft.startDate,
       endDate: editDraft.endDate,
     }));
@@ -105,6 +108,17 @@ export default function SiteMaster() {
               <option value="出来高">出来高</option>
             </select>
           </div>
+          <div>
+            <label className="text-xs text-muted">請求金額</label>
+            <input
+              type="number"
+              value={newBillingAmount}
+              onChange={(e) => setNewBillingAmount(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="請求金額"
+              disabled={newWorkType === "常用"}
+              className={`${inputCls} ${newWorkType === "常用" ? "bg-gray-100 text-muted cursor-not-allowed" : ""}`}
+            />
+          </div>
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="text-xs text-muted">着工日 *</label>
@@ -146,6 +160,7 @@ export default function SiteMaster() {
                   <th className="px-3 py-1.5">現場名</th>
                   <th className="px-3 py-1.5">顧客先名</th>
                   <th className="px-3 py-1.5">形態</th>
+                  <th className="px-3 py-1.5">請求金額</th>
                   <th className="px-3 py-1.5">着工日</th>
                   <th className="px-3 py-1.5">完工日</th>
                   <th className="px-3 py-1.5 w-12"></th>
@@ -186,6 +201,15 @@ export default function SiteMaster() {
                       </td>
                       <td className="px-2 py-1">
                         <input
+                          type="number"
+                          value={editDraft.billingAmount}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, billingAmount: e.target.value === "" ? "" : Number(e.target.value) }))}
+                          disabled={editDraft.workType === "常用"}
+                          className={`${editInputCls} ${editDraft.workType === "常用" ? "bg-gray-100 text-muted cursor-not-allowed" : ""}`}
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <input
                           type="date"
                           value={editDraft.startDate}
                           onChange={(e) => setEditDraft((d) => ({ ...d, startDate: e.target.value }))}
@@ -217,6 +241,9 @@ export default function SiteMaster() {
                       </td>
                       <td className="px-3 py-1.5 text-xs">
                         {s.workType || "-"}
+                      </td>
+                      <td className="px-3 py-1.5 font-mono text-xs text-right">
+                        {s.billingAmount ? `¥${Number(s.billingAmount).toLocaleString()}` : "-"}
                       </td>
                       <td className="px-3 py-1.5 font-mono text-xs">
                         {s.startDate || "-"}
