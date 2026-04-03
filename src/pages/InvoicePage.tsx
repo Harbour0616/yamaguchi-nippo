@@ -1,12 +1,19 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import type { DailyRecord } from "../types/journal";
 import { loadCompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
 import { loadSavedRecords } from "../data/dailyRecords";
 
+interface SiteGroup {
+  site: string;
+  rows: DailyRecord[];
+  subtotal: number;
+}
+
 interface InvoiceGroup {
   customer: string;
   rows: DailyRecord[];
+  siteGroups: SiteGroup[];
   subtotal: number;
   tax: number;
   total: number;
@@ -59,9 +66,22 @@ export default function InvoicePage() {
         0
       );
       const tax = Math.floor(subtotal * 0.1);
+      // Group by site
+      const siteMap = new Map<string, DailyRecord[]>();
+      for (const r of rows) {
+        const sk = r.site || "（現場未設定）";
+        if (!siteMap.has(sk)) siteMap.set(sk, []);
+        siteMap.get(sk)!.push(r);
+      }
+      const siteGroups: SiteGroup[] = Array.from(siteMap.entries()).map(([site, siteRows]) => ({
+        site,
+        rows: siteRows.sort((a, b) => a.task.localeCompare(b.task) || a.date.localeCompare(b.date)),
+        subtotal: siteRows.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0),
+      }));
       return {
         customer,
         rows: rows.sort((a, b) => a.date.localeCompare(b.date)),
+        siteGroups,
         subtotal,
         tax,
         total: subtotal + tax,
@@ -141,28 +161,45 @@ export default function InvoicePage() {
             <span className="font-medium">{monthLabel}分 作業費</span>
           </div>
 
-          {/* Line items */}
+          {/* Line items grouped by site */}
           <table className="w-full text-sm mb-6">
             <thead>
               <tr className="border-y-2 border-text/20 text-left text-xs text-muted">
                 <th className="py-2 px-2">稼働日</th>
-                <th className="py-2 px-2">現場名</th>
                 <th className="py-2 px-2">スタッフ</th>
                 <th className="py-2 px-2">業務</th>
                 <th className="py-2 px-2 text-right">請求金額</th>
               </tr>
             </thead>
             <tbody>
-              {group.rows.map((r) => (
-                <tr key={r.id} className="border-b border-border/50">
-                  <td className="py-2 px-2 font-mono text-xs">{r.date}</td>
-                  <td className="py-2 px-2">{r.site}</td>
-                  <td className="py-2 px-2">{r.staff}</td>
-                  <td className="py-2 px-2">{r.task}</td>
-                  <td className="py-2 px-2 text-right font-mono">
-                    ¥{(Number(r.sales.totalAmount) || 0).toLocaleString()}
-                  </td>
-                </tr>
+              {group.siteGroups.map((sg) => (
+                <React.Fragment key={sg.site}>
+                  {/* Site header */}
+                  <tr>
+                    <td colSpan={4} className="py-2 px-2 font-bold text-xs bg-[#f8fafc] border-b border-border">
+                      {sg.site}
+                    </td>
+                  </tr>
+                  {sg.rows.map((r) => (
+                    <tr key={r.id} className="border-b border-border/50">
+                      <td className="py-2 px-2 font-mono text-xs">{r.date}</td>
+                      <td className="py-2 px-2">{r.staff}</td>
+                      <td className="py-2 px-2">{r.task}</td>
+                      <td className="py-2 px-2 text-right font-mono">
+                        ¥{(Number(r.sales.totalAmount) || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Site subtotal */}
+                  <tr className="border-b border-border">
+                    <td colSpan={3} className="py-1.5 px-2 text-right text-xs text-muted">
+                      {sg.site} 小計
+                    </td>
+                    <td className="py-1.5 px-2 text-right font-mono text-xs font-bold">
+                      ¥{sg.subtotal.toLocaleString()}
+                    </td>
+                  </tr>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
