@@ -249,85 +249,87 @@ export default function ManualInput({ records, setRecords }: Props) {
               className="bg-white border border-border rounded-lg shadow-sm overflow-hidden"
             >
               {/* ===== 上段：共通フィールド ===== */}
-              <div className="bg-[#f8fafc] px-3 py-2 flex items-center gap-2 border-b border-border">
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  稼働日
-                  <input
-                    type="date"
-                    value={rec.date}
-                    onChange={(e) => updateField(rec.id, "date", e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  />
-                </label>
+              <div className="bg-[#f8fafc] px-3 py-2 overflow-x-auto border-b border-border">
+                <div className="flex items-center gap-2 w-max">
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    稼働日
+                    <input
+                      type="date"
+                      value={rec.date}
+                      onChange={(e) => updateField(rec.id, "date", e.target.value)}
+                      className={`${inputCls} min-w-[140px]`}
+                    />
+                  </label>
 
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  形態
-                  <select
-                    value={rec.type}
-                    onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
-                    className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent"
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    形態
+                    <select
+                      value={rec.type}
+                      onChange={(e) => updateField(rec.id, "type", e.target.value as WorkType)}
+                      className="bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent min-w-[80px]"
+                    >
+                      <option value="">選択</option>
+                      <option value="自社受">自社受</option>
+                      <option value="出来高">出来高</option>
+                      <option value="常用">常用</option>
+                    </select>
+                  </label>
+
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    業務
+                    <select
+                      value={rec.task}
+                      onChange={(e) => handleTaskChange(rec.id, e.target.value)}
+                      className={`${inputCls} min-w-[120px]`}
+                    >
+                      <option value="">選択</option>
+                      {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
+
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    顧客先
+                    <select
+                      value={rec.customer}
+                      onChange={(e) => handleCustomerChange(rec.id, e.target.value)}
+                      className={`${inputCls} min-w-[120px]`}
+                    >
+                      <option value="">選択</option>
+                      {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
+                  </label>
+
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    現場
+                    <select
+                      value={rec.site}
+                      onChange={(e) => handleSiteChange(rec.id, e.target.value)}
+                      className={`${inputCls} min-w-[140px]`}
+                    >
+                      <option value="">選択</option>
+                      {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </label>
+
+                  <label className="flex items-center gap-1 text-xs text-muted whitespace-nowrap shrink-0">
+                    スタッフ
+                    <select
+                      value={rec.staff}
+                      onChange={(e) => handleStaffChange(rec.id, e.target.value)}
+                      className={`${inputCls} min-w-[120px]`}
+                    >
+                      <option value="">選択</option>
+                      {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </label>
+
+                  <button
+                    onClick={() => resetRecord(rec.id)}
+                    className="shrink-0 px-3 py-1 rounded bg-surface border border-border text-muted text-xs whitespace-nowrap hover:bg-[rgba(0,0,0,0.03)] hover:text-text transition"
                   >
-                    <option value="">選択</option>
-                    <option value="自社受">自社受</option>
-                    <option value="出来高">出来高</option>
-                    <option value="常用">常用</option>
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  業務
-                  <select
-                    value={rec.task}
-                    onChange={(e) => handleTaskChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  >
-                    <option value="">選択</option>
-                    {TASK_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  顧客先
-                  <select
-                    value={rec.customer}
-                    onChange={(e) => handleCustomerChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[140px]`}
-                  >
-                    <option value="">選択</option>
-                    {customers.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  現場
-                  <select
-                    value={rec.site}
-                    onChange={(e) => handleSiteChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[160px]`}
-                  >
-                    <option value="">選択</option>
-                    {sites.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </label>
-
-                <label className="flex items-center gap-1 text-xs text-muted shrink-0">
-                  スタッフ
-                  <select
-                    value={rec.staff}
-                    onChange={(e) => handleStaffChange(rec.id, e.target.value)}
-                    className={`${inputCls} w-[120px]`}
-                  >
-                    <option value="">選択</option>
-                    {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-                  </select>
-                </label>
-
-                <button
-                  onClick={() => resetRecord(rec.id)}
-                  className="shrink-0 px-3 py-1 rounded bg-surface border border-border text-muted text-xs hover:bg-[rgba(0,0,0,0.03)] hover:text-text transition"
-                >
-                  リセット
-                </button>
+                    リセット
+                  </button>
+                </div>
               </div>
 
               {/* ===== 下段：売上 + 原価 + 日次サマリー 横並び ===== */}
