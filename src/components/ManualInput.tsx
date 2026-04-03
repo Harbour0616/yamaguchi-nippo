@@ -420,7 +420,7 @@ export default function ManualInput({ records, setRecords }: Props) {
         </div>
       </section>
 
-      {/* 入力済み一覧 */}
+      {/* 登録済み一覧 */}
       <SavedRecordsList
         savedRecords={savedRecords}
         customers={customers}
@@ -499,7 +499,7 @@ function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[];
   );
 }
 
-/** 入力済み一覧（フィルター＋合計付き＋ダブルクリック編集モーダル） */
+/** 登録済み一覧（フィルター＋合計付き＋ダブルクリック編集モーダル） */
 function SavedRecordsList({
   savedRecords,
   customers,
@@ -663,7 +663,7 @@ function SavedRecordsList({
     <section className="mt-8">
       <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
         <span className="w-2 h-5 bg-accent rounded-full inline-block"></span>
-        入力済み一覧
+        登録済み一覧
       </h2>
       {savedRecords.length === 0 ? (
         <p className="text-muted text-sm py-2">保存済みの日報はありません。</p>
@@ -697,6 +697,8 @@ function SavedRecordsList({
             <span className="text-muted">{filtered.length} 件</span>
             <span>売上合計: <span className="font-mono font-bold">¥{totalSales.toLocaleString()}</span></span>
             <span>原価合計: <span className="font-mono font-bold">¥{totalCost.toLocaleString()}</span></span>
+            <span>粗利合計: <span className={`font-mono font-bold ${totalSales - totalCost >= 0 ? "text-green-600" : "text-red-500"}`}>¥{(totalSales - totalCost).toLocaleString()}</span></span>
+            <span>粗利率: <span className={`font-mono font-bold ${totalSales - totalCost >= 0 ? "text-green-600" : "text-red-500"}`}>{totalSales > 0 ? ((totalSales - totalCost) / totalSales * 100).toFixed(1) + "%" : "-"}</span></span>
           </div>
 
           <div className="overflow-x-auto">
