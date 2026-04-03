@@ -37,6 +37,7 @@ export default function InvoicePage() {
   const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>(
     {}
   );
+  const [subjects, setSubjects] = useState<Record<string, string>>({});
 
   const company = useMemo(() => loadCompanyInfo(), []);
 
@@ -162,9 +163,14 @@ export default function InvoicePage() {
           </div>
 
           {/* Subject */}
-          <div className="mb-6 text-sm">
+          <div className="mb-6 text-sm flex items-center gap-1">
             <span className="text-muted">件名: </span>
-            <span className="font-medium">{monthLabel}分 作業費</span>
+            <input
+              type="text"
+              value={subjects[group.customer] ?? `${monthLabel}分 作業費`}
+              onChange={(e) => setSubjects((prev) => ({ ...prev, [group.customer]: e.target.value }))}
+              className="font-medium border-b border-transparent hover:border-border focus:border-accent focus:outline-none px-1 py-0.5 bg-transparent print:border-none"
+            />
           </div>
 
           {/* Line items */}
