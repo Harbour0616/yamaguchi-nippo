@@ -9,4 +9,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export const TENANT_ID = import.meta.env.VITE_TENANT_ID as string
+export const TENANT_ID = (import.meta.env.VITE_TENANT_ID as string).trim()
