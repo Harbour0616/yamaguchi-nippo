@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { DailyRecord } from "../types/journal";
-import { loadCompanyInfo } from "../data/companyInfo";
+import { loadCompanyInfo, DEFAULT_COMPANY_INFO, type CompanyInfo } from "../data/companyInfo";
 import { getNextInvoiceNumber } from "../data/invoiceNumbers";
 import { loadSavedRecords } from "../data/dailyRecords";
-import { loadSites } from "../data/sites";
+import { loadSites, type Site } from "../data/sites";
 
 interface InvoiceLine {
   site: string;
@@ -38,20 +38,26 @@ function getLastDayOfMonth(ym: string): string {
 }
 
 export default function InvoicePage() {
-  const records = useMemo(() => loadSavedRecords(), []);
-  const siteMaster = useMemo(() => loadSites(), []);
+  const [records, setRecords] = useState<DailyRecord[]>([]);
+  const [siteMaster, setSiteMaster] = useState<Site[]>([]);
+  const [company, setCompany] = useState<CompanyInfo>({ ...DEFAULT_COMPANY_INFO });
+  const [loading, setLoading] = useState(true);
+
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const invoiceDate = useMemo(() => getLastDayOfMonth(targetMonth), [targetMonth]);
   const [previewCustomer, setPreviewCustomer] = useState<string | null>(null);
-  const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>(
-    {}
-  );
+  const [invoiceNumbers, setInvoiceNumbers] = useState<Record<string, string>>({});
   const [subjects, setSubjects] = useState<Record<string, string>>({});
 
-  const company = useMemo(() => loadCompanyInfo(), []);
+  useEffect(() => {
+    Promise.all([loadSavedRecords(), loadSites(), loadCompanyInfo()])
+      .then(([r, s, c]) => { setRecords(r); setSiteMaster(s); setCompany(c); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   // Filter records by target month
   const filtered = useMemo(() => {
@@ -68,8 +74,6 @@ export default function InvoicePage() {
   }, [records, targetMonth]);
 
   // Group by customer, then aggregate by site × task
-  // 常用 → 日報の請求金額を積み上げ
-  // 自社受・出来高 → 現場マスタの請求金額を現場ごとに1回だけ計上
   const groups = useMemo<InvoiceGroup[]>(() => {
     const map = new Map<string, DailyRecord[]>();
     for (const r of filtered) {
@@ -86,7 +90,6 @@ export default function InvoicePage() {
         const task = r.task || "（業務未設定）";
 
         if (r.type === "自社受" || r.type === "出来高") {
-          // 現場マスタの請求金額を1回だけ計上
           if (!r.site || countedSites.has(r.site)) continue;
           countedSites.add(r.site);
           const matched = siteMaster.find((s) => s.name === r.site);
@@ -95,7 +98,6 @@ export default function InvoicePage() {
           const lk = `${site}\0${task}`;
           lineMap.set(lk, { site, task, count: 1, totalAmount: billing, unitPriceSum: billing });
         } else {
-          // 常用: 日報の請求金額を積み上げ
           const lk = `${site}\0${task}`;
           const existing = lineMap.get(lk);
           const amt = Number(r.sales.totalAmount) || 0;
@@ -127,19 +129,27 @@ export default function InvoicePage() {
   const [ymYear, ymMonth] = targetMonth.split("-");
   const monthLabel = `${ymYear}年${Number(ymMonth)}月`;
 
-  const getInvoiceNo = (customer: string) => {
+  const getInvoiceNo = async (customer: string) => {
     if (invoiceNumbers[customer]) return invoiceNumbers[customer];
     const ym = targetMonth.replace("-", "");
-    const no = getNextInvoiceNumber(ym);
+    const no = await getNextInvoiceNumber(ym);
     setInvoiceNumbers((prev) => ({ ...prev, [customer]: no }));
     return no;
   };
+
+  // When entering preview, pre-fetch the invoice number
+  const handlePreview = async (customer: string) => {
+    await getInvoiceNo(customer);
+    setPreviewCustomer(customer);
+  };
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   // Preview mode
   if (previewCustomer !== null) {
     const group = groups.find((g) => g.customer === previewCustomer);
     if (!group) return null;
-    const invoiceNo = getInvoiceNo(group.customer);
+    const invoiceNo = invoiceNumbers[group.customer] ?? "";
 
     return (
       <div>
@@ -310,7 +320,7 @@ export default function InvoicePage() {
                 </div>
               </div>
               <button
-                onClick={() => setPreviewCustomer(g.customer)}
+                onClick={() => handlePreview(g.customer)}
                 className="px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition"
               >
                 プレビュー

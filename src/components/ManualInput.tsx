@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DailyRecord, SalesRow, CostRow, WorkType } from "../types/journal";
 import {
   createEmptyDailyRecord,
   calcSalesTotal,
   calcCostPaidSalary,
 } from "../types/journal";
-import { loadCustomers, RATE_LABELS, type CustomerRates } from "../data/customers";
+import { loadCustomers, RATE_LABELS, type Customer, type CustomerRates } from "../data/customers";
 import { loadSites, type Site } from "../data/sites";
-import { loadStaff } from "../data/staff";
+import { loadStaff, type Staff } from "../data/staff";
 import { loadSavedRecords, saveDailyRecords, removeSavedRecord, updateSavedRecord } from "../data/dailyRecords";
 import { calcTotalSales } from "../utils/calcSales";
 
@@ -22,10 +22,23 @@ interface Props {
 }
 
 export default function ManualInput({ records, setRecords }: Props) {
-  const customers = useMemo(() => loadCustomers(), []);
-  const sites = useMemo(() => loadSites(), []);
-  const staffList = useMemo(() => loadStaff(), []);
-  const [savedRecords, setSavedRecords] = useState<DailyRecord[]>(loadSavedRecords);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [savedRecords, setSavedRecords] = useState<DailyRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([loadCustomers(), loadSites(), loadStaff(), loadSavedRecords()])
+      .then(([c, s, st, sr]) => {
+        setCustomers(c);
+        setSites(s);
+        setStaffList(st);
+        setSavedRecords(sr);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   // --- Update helpers ---
 
@@ -204,23 +217,23 @@ export default function ManualInput({ records, setRecords }: Props) {
     );
   }, []);
 
-  const handleSaveRecords = useCallback(() => {
+  const handleSaveRecords = useCallback(async () => {
     const valid = records.filter((r) => r.date && r.staff);
     if (valid.length === 0) return;
-    const updated = saveDailyRecords(valid);
+    const updated = await saveDailyRecords(valid);
     setSavedRecords(updated);
     setRecords([createEmptyDailyRecord()]);
   }, [records, setRecords]);
 
-  const handleDeleteSaved = useCallback((id: string) => {
-    setSavedRecords(removeSavedRecord(id));
+  const handleDeleteSaved = useCallback(async (id: string) => {
+    setSavedRecords(await removeSavedRecord(id));
   }, []);
 
-  const handleUpdateSaved = useCallback((rec: DailyRecord) => {
-    setSavedRecords(updateSavedRecord(rec));
+  const handleUpdateSaved = useCallback(async (rec: DailyRecord) => {
+    setSavedRecords(await updateSavedRecord(rec));
   }, []);
 
-
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
@@ -430,9 +443,8 @@ export default function ManualInput({ records, setRecords }: Props) {
 function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[]; inputCls: string }) {
   const [summaryDate, setSummaryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
-  const summary = useMemo(() => {
-    const dayRecords = savedRecords.filter((r) => r.date === summaryDate);
-    if (dayRecords.length === 0) return null;
+  const dayRecords = savedRecords.filter((r) => r.date === summaryDate);
+  const summary = dayRecords.length === 0 ? null : (() => {
     const sales = dayRecords.reduce((s, r) => s + (Number(r.sales.totalAmount) || 0), 0);
     const cost = dayRecords.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
     const profit = sales - cost;
@@ -444,7 +456,7 @@ function DailySummary({ savedRecords, inputCls }: { savedRecords: DailyRecord[];
       if (r.customer) customerSet.add(r.customer);
     }
     return { count: dayRecords.length, sales, cost, profit, profitRate, sites: Array.from(siteSet), customers: Array.from(customerSet) };
-  }, [savedRecords, summaryDate]);
+  })();
 
   const fmt = (v: number) => `¥${v.toLocaleString()}`;
 
@@ -514,13 +526,13 @@ function SavedRecordsList({
   const [filterCustomer, setFilterCustomer] = useState("");
   const [editDraft, setEditDraft] = useState<DailyRecord | null>(null);
 
-  const availableMonths = useMemo(() => {
+  const availableMonths = (() => {
     const set = new Set<string>();
     for (const r of savedRecords) {
       if (r.date) set.add(r.date.slice(0, 7));
     }
     return Array.from(set).sort().reverse();
-  }, [savedRecords]);
+  })();
 
   const filtered = savedRecords.filter((r) => {
     if (filterMonth && (!r.date || !r.date.startsWith(filterMonth))) return false;
@@ -528,7 +540,7 @@ function SavedRecordsList({
     return true;
   });
 
-  const totalSales = useMemo(() => calcTotalSales(filtered, sites), [filtered, sites]);
+  const totalSales = calcTotalSales(filtered, sites);
   const totalCost = filtered.reduce((s, r) => s + (Number(r.cost.paidSalary) || 0), 0);
 
   // --- Modal helpers ---

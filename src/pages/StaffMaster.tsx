@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   loadStaff,
   addStaff,
@@ -8,33 +8,40 @@ import {
 } from "../data/staff";
 
 export default function StaffMaster() {
-  const [staff, setStaff] = useState<Staff[]>(loadStaff);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [unitPrice, setUnitPrice] = useState<number | "">("");
 
   // --- Modal edit ---
   const [editDraft, setEditDraft] = useState<Staff | null>(null);
 
-  const handleAdd = () => {
+  useEffect(() => {
+    loadStaff().then(setStaff).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
+  const handleAdd = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setStaff(addStaff(trimmed, unitPrice));
+    setStaff(await addStaff(trimmed, unitPrice));
     setName("");
     setUnitPrice("");
   };
 
-  const handleRemove = (id: string) => {
-    setStaff(removeStaff(id));
+  const handleRemove = async (id: string) => {
+    setStaff(await removeStaff(id));
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editDraft || !editDraft.name.trim()) return;
-    setStaff(updateStaff(editDraft.id, { name: editDraft.name.trim(), unitPrice: editDraft.unitPrice }));
+    setStaff(await updateStaff(editDraft.id, { name: editDraft.name.trim(), unitPrice: editDraft.unitPrice }));
     setEditDraft(null);
   };
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   return (
     <div>

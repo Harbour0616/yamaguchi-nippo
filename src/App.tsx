@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { DailyRecord } from "./types/journal";
 import { createEmptyDailyRecord } from "./types/journal";
 import ManualInput from "./components/ManualInput";
@@ -11,6 +11,7 @@ import InvoicePage from "./pages/InvoicePage";
 import PayslipPage from "./pages/PayslipPage";
 import SiteMaster from "./pages/SiteMaster";
 import Dashboard from "./pages/Dashboard";
+import { runMigrationIfNeeded } from "./utils/migrate";
 
 type Page =
   | "dashboard"
@@ -60,58 +61,26 @@ const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
   },
 ];
 
-/* 起動時マイグレーション: 形態「請負」→「自社受」 */
-(function migrateUkeoi() {
-  const MIGRATED_KEY = "yamaguchi_migrated_ukeoi";
-  if (localStorage.getItem(MIGRATED_KEY)) return;
-
-  let totalConverted = 0;
-
-  // 日報データ
-  const recordsRaw = localStorage.getItem("yamaguchi_daily_records");
-  if (recordsRaw) {
-    try {
-      const records = JSON.parse(recordsRaw) as { type?: string }[];
-      let count = 0;
-      for (const r of records) {
-        if (r.type === "請負") { r.type = "自社受"; count++; }
-      }
-      if (count > 0) {
-        localStorage.setItem("yamaguchi_daily_records", JSON.stringify(records));
-        console.log(`[migration] 日報データ: ${count} 件の「請負」→「自社受」に変換`);
-        totalConverted += count;
-      }
-    } catch { /* ignore */ }
-  }
-
-  // 現場データ
-  const sitesRaw = localStorage.getItem("yamaguchi_sites");
-  if (sitesRaw) {
-    try {
-      const sites = JSON.parse(sitesRaw) as { workType?: string }[];
-      let count = 0;
-      for (const s of sites) {
-        if (s.workType === "請負") { s.workType = "自社受"; count++; }
-      }
-      if (count > 0) {
-        localStorage.setItem("yamaguchi_sites", JSON.stringify(sites));
-        console.log(`[migration] 現場データ: ${count} 件の「請負」→「自社受」に変換`);
-        totalConverted += count;
-      }
-    } catch { /* ignore */ }
-  }
-
-  if (totalConverted > 0) {
-    alert(`形態データ移行完了: ${totalConverted} 件の「請負」を「自社受」に変換しました`);
-  }
-  localStorage.setItem(MIGRATED_KEY, "1");
-})();
-
 function App() {
   const [page, setPage] = useState<Page>("manual");
   const [records, setRecords] = useState<DailyRecord[]>([
     createEmptyDailyRecord(),
   ]);
+  const [migrating, setMigrating] = useState(true);
+
+  useEffect(() => {
+    runMigrationIfNeeded()
+      .catch(console.error)
+      .finally(() => setMigrating(false));
+  }, []);
+
+  if (migrating) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="text-sm text-muted">読み込み中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans flex">

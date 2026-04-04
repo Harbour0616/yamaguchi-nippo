@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   loadCompanyInfo,
   saveCompanyInfo,
+  DEFAULT_COMPANY_INFO,
   type CompanyInfo,
 } from "../data/companyInfo";
 
@@ -21,21 +22,28 @@ const FIELDS: { key: keyof CompanyInfo; label: string; placeholder: string }[] =
   ];
 
 export default function CompanyMaster() {
-  const [info, setInfo] = useState<CompanyInfo>(loadCompanyInfo);
+  const [info, setInfo] = useState<CompanyInfo>({ ...DEFAULT_COMPANY_INFO });
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    loadCompanyInfo().then(setInfo).catch(console.error).finally(() => setLoading(false));
+  }, []);
 
   const update = (key: keyof CompanyInfo, value: string) => {
     setInfo((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
   };
 
-  const handleSave = () => {
-    saveCompanyInfo(info);
+  const handleSave = async () => {
+    await saveCompanyInfo(info);
     setSaved(true);
   };
 
   const inputCls =
     "w-full bg-white border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   return (
     <div className="max-w-xl">
@@ -67,7 +75,7 @@ export default function CompanyMaster() {
       )}
 
       <p className="text-muted text-xs mt-4">
-        ブラウザのローカルストレージに保存されます
+        データはSupabaseに保存されます
       </p>
     </div>
   );

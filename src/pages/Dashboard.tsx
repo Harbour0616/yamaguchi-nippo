@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import type { DailyRecord } from "../types/journal";
+import type { Site } from "../data/sites";
 import { loadSavedRecords } from "../data/dailyRecords";
 import { loadSites } from "../data/sites";
 import { calcSalesBySite } from "../utils/calcSales";
@@ -215,8 +217,17 @@ type ViewTab = "monthly" | "customer" | "site";
 
 /* ═══════════════════════════════════════════════════ */
 export default function Dashboard() {
-  const records = useMemo(() => loadSavedRecords(), []);
-  const siteMaster = useMemo(() => loadSites(), []);
+  const [records, setRecords] = useState<DailyRecord[]>([]);
+  const [siteMaster, setSiteMaster] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([loadSavedRecords(), loadSites()])
+      .then(([r, s]) => { setRecords(r); setSiteMaster(s); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   const [filterMonth, setFilterMonth] = useState("");
   const [viewTab, setViewTab] = useState<ViewTab>("monthly");
   const [unit, setUnit] = useState<"yen" | "k">("yen");
@@ -415,6 +426,8 @@ export default function Dashboard() {
     letterSpacing: "-0.02em",
     color: "#0f172a",
   };
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   return (
     <div

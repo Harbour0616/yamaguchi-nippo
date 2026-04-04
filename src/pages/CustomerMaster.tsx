@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   loadCustomers,
   addCustomer,
@@ -13,9 +13,14 @@ import {
 const RATE_COUNT = RATE_LABELS.length;
 
 export default function CustomerMaster() {
-  const [customers, setCustomers] = useState<Customer[]>(loadCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [newRates, setNewRates] = useState<CustomerRates>({ ...emptyRates });
+
+  useEffect(() => {
+    loadCustomers().then(setCustomers).catch(console.error).finally(() => setLoading(false));
+  }, []);
 
   // --- Refs for Enter-key navigation ---
   const newRateRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -42,16 +47,16 @@ export default function CustomerMaster() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<{ name: string; rates: CustomerRates }>({ name: "", rates: { ...emptyRates } });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setCustomers(addCustomer(trimmed, { ...newRates }));
+    setCustomers(await addCustomer(trimmed, { ...newRates }));
     setName("");
     setNewRates({ ...emptyRates });
   };
 
-  const handleRemove = (id: string) => {
-    setCustomers(removeCustomer(id));
+  const handleRemove = async (id: string) => {
+    setCustomers(await removeCustomer(id));
     if (editingId === id) setEditingId(null);
   };
 
@@ -65,15 +70,17 @@ export default function CustomerMaster() {
     setEditingId(null);
   }, []);
 
-  const saveEdit = useCallback(() => {
+  const saveEdit = useCallback(async () => {
     if (!editingId || !editDraft.name.trim()) return;
-    setCustomers(updateCustomer(editingId, { name: editDraft.name.trim(), rates: editDraft.rates }));
+    setCustomers(await updateCustomer(editingId, { name: editDraft.name.trim(), rates: editDraft.rates }));
     setEditingId(null);
   }, [editingId, editDraft]);
 
   const inputCls =
     "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
   const numCls = `${inputCls} font-mono text-right`;
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   return (
     <div>

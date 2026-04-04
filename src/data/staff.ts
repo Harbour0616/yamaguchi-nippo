@@ -1,48 +1,76 @@
+import { supabase, TENANT_ID } from "../utils/supabase";
+
 export interface Staff {
   id: string;
   name: string;
   unitPrice: number | "";
 }
 
-const STORAGE_KEY = "yamaguchi_staff";
+const TABLE = "yamaguchi_staff";
 
-export function loadStaff(): Staff[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Staff[];
-    return parsed.map((s) => {
-      if (s.unitPrice === undefined || s.unitPrice === null) {
-        return { ...s, unitPrice: "" as const };
-      }
-      return s;
-    });
-  } catch {
-    return [];
-  }
+interface DbRow {
+  id: string;
+  tenant_id: string;
+  name: string;
+  unit_price: number | null;
 }
 
-export function saveStaff(staff: Staff[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(staff));
+function toStaff(row: DbRow): Staff {
+  return {
+    id: row.id,
+    name: row.name,
+    unitPrice: row.unit_price ?? "",
+  };
 }
 
-export function addStaff(name: string, unitPrice: number | "" = ""): Staff[] {
-  const staff = loadStaff();
+function toDb(s: Staff): DbRow {
+  return {
+    id: s.id,
+    tenant_id: TENANT_ID,
+    name: s.name,
+    unit_price: s.unitPrice === "" ? null : s.unitPrice,
+  };
+}
+
+export async function loadStaff(): Promise<Staff[]> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("tenant_id", TENANT_ID);
+  if (error) { console.error("loadStaff", error); return []; }
+  return (data as DbRow[]).map(toStaff);
+}
+
+export async function addStaff(name: string, unitPrice: number | "" = ""): Promise<Staff[]> {
   const trimmed = name.trim();
-  if (!trimmed || staff.some((s) => s.name === trimmed)) return staff;
-  const updated = [...staff, { id: crypto.randomUUID(), name: trimmed, unitPrice }];
-  saveStaff(updated);
-  return updated;
+  if (!trimmed) return loadStaff();
+  const existing = await loadStaff();
+  if (existing.some((s) => s.name === trimmed)) return existing;
+  const newStaff: Staff = { id: crypto.randomUUID(), name: trimmed, unitPrice };
+  const { error } = await supabase.from(TABLE).insert(toDb(newStaff));
+  if (error) console.error("addStaff", error);
+  return loadStaff();
 }
 
-export function updateStaff(id: string, patch: Partial<Omit<Staff, "id">>): Staff[] {
-  const staff = loadStaff().map((s) => (s.id === id ? { ...s, ...patch } : s));
-  saveStaff(staff);
-  return staff;
+export async function updateStaff(id: string, patch: Partial<Omit<Staff, "id">>): Promise<Staff[]> {
+  const dbPatch: Record<string, unknown> = {};
+  if (patch.name !== undefined) dbPatch.name = patch.name;
+  if (patch.unitPrice !== undefined) dbPatch.unit_price = patch.unitPrice === "" ? null : patch.unitPrice;
+  const { error } = await supabase
+    .from(TABLE)
+    .update(dbPatch)
+    .eq("id", id)
+    .eq("tenant_id", TENANT_ID);
+  if (error) console.error("updateStaff", error);
+  return loadStaff();
 }
 
-export function removeStaff(id: string): Staff[] {
-  const staff = loadStaff().filter((s) => s.id !== id);
-  saveStaff(staff);
-  return staff;
+export async function removeStaff(id: string): Promise<Staff[]> {
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq("id", id)
+    .eq("tenant_id", TENANT_ID);
+  if (error) console.error("removeStaff", error);
+  return loadStaff();
 }

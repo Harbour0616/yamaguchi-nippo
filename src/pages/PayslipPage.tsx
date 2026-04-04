@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { DailyRecord } from "../types/journal";
-import { loadCompanyInfo } from "../data/companyInfo";
+import { loadCompanyInfo, DEFAULT_COMPANY_INFO, type CompanyInfo } from "../data/companyInfo";
 import { loadSavedRecords } from "../data/dailyRecords";
 
 interface StaffSummary {
@@ -50,14 +50,22 @@ function aggregateStaff(staffName: string, rows: DailyRecord[]): StaffSummary {
 }
 
 export default function PayslipPage() {
-  const records = useMemo(() => loadSavedRecords(), []);
+  const [records, setRecords] = useState<DailyRecord[]>([]);
+  const [company, setCompany] = useState<CompanyInfo>({ ...DEFAULT_COMPANY_INFO });
+  const [loading, setLoading] = useState(true);
+
   const [targetMonth, setTargetMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
   const [previewStaff, setPreviewStaff] = useState<string | null>(null);
 
-  const company = useMemo(() => loadCompanyInfo(), []);
+  useEffect(() => {
+    Promise.all([loadSavedRecords(), loadCompanyInfo()])
+      .then(([r, c]) => { setRecords(r); setCompany(c); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   // Filter by month — require date, staff, and some cost data
   const filtered = useMemo(() => {
@@ -87,6 +95,8 @@ export default function PayslipPage() {
 
   const [ymYear, ymMonth] = targetMonth.split("-");
   const monthLabel = `${ymYear}年${Number(ymMonth)}月`;
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   // Preview mode
   if (previewStaff !== null) {

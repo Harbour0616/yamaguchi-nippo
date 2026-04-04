@@ -1,28 +1,25 @@
-const STORAGE_KEY = "yamaguchi_invoice_numbers";
+import { supabase, TENANT_ID } from "../utils/supabase";
 
-interface InvoiceCounter {
-  [yearMonth: string]: number;
-}
+const TABLE = "yamaguchi_invoice_counters";
 
-function load(): InvoiceCounter {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
+export async function getNextInvoiceNumber(yearMonth: string): Promise<string> {
+  // Try to increment existing counter
+  const { data: existing } = await supabase
+    .from(TABLE)
+    .select("counter")
+    .eq("tenant_id", TENANT_ID)
+    .eq("month", yearMonth)
+    .maybeSingle();
 
-function save(data: InvoiceCounter): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+  const next = (existing?.counter ?? 0) + 1;
 
-export function getNextInvoiceNumber(yearMonth: string): string {
-  const data = load();
-  const current = data[yearMonth] ?? 0;
-  const next = current + 1;
-  data[yearMonth] = next;
-  save(data);
+  const { error } = await supabase
+    .from(TABLE)
+    .upsert(
+      { tenant_id: TENANT_ID, month: yearMonth, counter: next },
+      { onConflict: "tenant_id,month" }
+    );
+  if (error) console.error("getNextInvoiceNumber", error);
+
   return `${yearMonth}-${String(next).padStart(3, "0")}`;
 }

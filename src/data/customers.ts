@@ -1,3 +1,5 @@
+import { supabase, TENANT_ID } from "../utils/supabase";
+
 export interface CustomerRates {
   kaitaiDay: number | "";
   kaitaiDayOt: number | "";
@@ -37,45 +39,67 @@ export interface Customer {
   rates: CustomerRates;
 }
 
-const STORAGE_KEY = "yamaguchi-nippo-customers";
+const TABLE = "yamaguchi_customers";
 
-export function loadCustomers(): Customer[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Customer[];
-    return parsed.map((c) => ({ ...c, rates: { ...emptyRates, ...c.rates } }));
-  } catch {
-    return [];
-  }
+interface DbRow {
+  id: string;
+  tenant_id: string;
+  name: string;
+  rates: CustomerRates;
 }
 
-export function saveCustomers(customers: Customer[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+function toCustomer(row: DbRow): Customer {
+  return {
+    id: row.id,
+    name: row.name,
+    rates: { ...emptyRates, ...row.rates },
+  };
 }
 
-export function addCustomer(name: string, rates?: CustomerRates): Customer[] {
-  const customers = loadCustomers();
+export async function loadCustomers(): Promise<Customer[]> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("tenant_id", TENANT_ID);
+  if (error) { console.error("loadCustomers", error); return []; }
+  return (data as DbRow[]).map(toCustomer);
+}
+
+export async function addCustomer(name: string, rates?: CustomerRates): Promise<Customer[]> {
   const trimmed = name.trim();
-  if (!trimmed || customers.some((c) => c.name === trimmed)) return customers;
-  const updated = [
-    ...customers,
-    { id: crypto.randomUUID(), name: trimmed, rates: rates ?? { ...emptyRates } },
-  ];
-  saveCustomers(updated);
-  return updated;
+  if (!trimmed) return loadCustomers();
+  const existing = await loadCustomers();
+  if (existing.some((c) => c.name === trimmed)) return existing;
+  const row = {
+    id: crypto.randomUUID(),
+    tenant_id: TENANT_ID,
+    name: trimmed,
+    rates: rates ?? { ...emptyRates },
+  };
+  const { error } = await supabase.from(TABLE).insert(row);
+  if (error) console.error("addCustomer", error);
+  return loadCustomers();
 }
 
-export function updateCustomer(id: string, patch: Partial<Omit<Customer, "id">>): Customer[] {
-  const customers = loadCustomers().map((c) =>
-    c.id === id ? { ...c, ...patch } : c
-  );
-  saveCustomers(customers);
-  return customers;
+export async function updateCustomer(id: string, patch: Partial<Omit<Customer, "id">>): Promise<Customer[]> {
+  const dbPatch: Record<string, unknown> = {};
+  if (patch.name !== undefined) dbPatch.name = patch.name;
+  if (patch.rates !== undefined) dbPatch.rates = patch.rates;
+  const { error } = await supabase
+    .from(TABLE)
+    .update(dbPatch)
+    .eq("id", id)
+    .eq("tenant_id", TENANT_ID);
+  if (error) console.error("updateCustomer", error);
+  return loadCustomers();
 }
 
-export function removeCustomer(id: string): Customer[] {
-  const customers = loadCustomers().filter((c) => c.id !== id);
-  saveCustomers(customers);
-  return customers;
+export async function removeCustomer(id: string): Promise<Customer[]> {
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq("id", id)
+    .eq("tenant_id", TENANT_ID);
+  if (error) console.error("removeCustomer", error);
+  return loadCustomers();
 }

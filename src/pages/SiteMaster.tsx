@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
-import { loadCustomers } from "../data/customers";
+import { useState, useCallback, useEffect } from "react";
+import { loadCustomers, type Customer } from "../data/customers";
 import { loadSites, addSite, removeSite, updateSite, type Site, type SiteWorkType } from "../data/sites";
 
 export default function SiteMaster() {
-  const customers = useMemo(() => loadCustomers(), []);
-  const [sites, setSites] = useState<Site[]>(loadSites);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newSiteName, setNewSiteName] = useState("");
   const [newSiteCustomer, setNewSiteCustomer] = useState("");
   const [newWorkType, setNewWorkType] = useState<SiteWorkType>("");
@@ -12,12 +13,19 @@ export default function SiteMaster() {
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
-  const handleAddSite = useCallback(() => {
+  useEffect(() => {
+    Promise.all([loadCustomers(), loadSites()])
+      .then(([c, s]) => { setCustomers(c); setSites(s); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleAddSite = useCallback(async () => {
     const trimmedName = newSiteName.trim();
     const trimmedCustomer = newSiteCustomer.trim();
     if (!trimmedName || !newStartDate) return;
     const matched = customers.find((c) => c.name === trimmedCustomer);
-    setSites(addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newWorkType, newWorkType === "常用" ? "" : newBillingAmount, newStartDate, newEndDate));
+    setSites(await addSite(trimmedName, matched?.id ?? "", trimmedCustomer, newWorkType, newWorkType === "常用" ? "" : newBillingAmount, newStartDate, newEndDate));
     setNewSiteName("");
     setNewSiteCustomer("");
     setNewWorkType("");
@@ -26,8 +34,8 @@ export default function SiteMaster() {
     setNewEndDate("");
   }, [newSiteName, newSiteCustomer, newWorkType, newBillingAmount, newStartDate, newEndDate, customers]);
 
-  const handleRemoveSite = useCallback((id: string) => {
-    setSites(removeSite(id));
+  const handleRemoveSite = useCallback(async (id: string) => {
+    setSites(await removeSite(id));
     setEditingId(null);
   }, []);
 
@@ -44,10 +52,10 @@ export default function SiteMaster() {
     setEditingId(null);
   }, []);
 
-  const saveEdit = useCallback(() => {
+  const saveEdit = useCallback(async () => {
     if (!editingId || !editDraft.name.trim() || !editDraft.startDate) return;
     const matched = customers.find((c) => c.name === editDraft.customer_name.trim());
-    setSites(updateSite(editingId, {
+    setSites(await updateSite(editingId, {
       name: editDraft.name.trim(),
       customer_id: matched?.id ?? "",
       customer_name: editDraft.customer_name.trim(),
@@ -63,6 +71,8 @@ export default function SiteMaster() {
     "w-full bg-white border border-border rounded px-2 py-1.5 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
   const editInputCls =
     "w-full bg-white border border-accent/40 rounded px-2 py-1 text-sm text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20";
+
+  if (loading) return <div className="text-sm text-muted p-4">読み込み中...</div>;
 
   return (
     <div>
