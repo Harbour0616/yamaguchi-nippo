@@ -7,6 +7,7 @@ const TABLE = "yamaguchi_daily_records";
 interface DbRow {
   id: string;
   tenant_id: string;
+  date: string;
   data: DailyRecord;
 }
 
@@ -27,6 +28,7 @@ export async function saveDailyRecords(records: DailyRecord[]): Promise<DailyRec
   const rows = records.map((r) => ({
     id: r.id,
     tenant_id: TENANT_ID,
+    date: r.date || new Date().toISOString().slice(0, 10),
     data: r,
   }));
   const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: "id" });
@@ -37,7 +39,7 @@ export async function saveDailyRecords(records: DailyRecord[]): Promise<DailyRec
 export async function updateSavedRecord(updated: DailyRecord): Promise<DailyRecord[]> {
   const { error } = await supabase
     .from(TABLE)
-    .update({ data: updated })
+    .update({ date: updated.date || new Date().toISOString().slice(0, 10), data: updated })
     .eq("id", updated.id)
     .eq("tenant_id", TENANT_ID);
   if (error) console.error("updateSavedRecord", error);

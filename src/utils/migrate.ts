@@ -21,6 +21,7 @@ export async function runMigrationIfNeeded(): Promise<void> {
         const rows = records.map((r) => ({
           id: r.id,
           tenant_id: TENANT_ID,
+          date: r.date || new Date().toISOString().slice(0, 10),
           data: r,
         }));
         const { error } = await supabase
